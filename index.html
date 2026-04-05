@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pasapalabra Fútbol - Modo Manos Libres</title>
+    <style>
+        :root {
+            --azul-pasapalabra: #0056b3;
+            --verde-acierto: #28a745;
+            --rojo-fallo: #dc3545;
+            --naranja-espera: #ffc107;
+            --morado-voz: #9b59b6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #1a1a2e;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            width: 600px;
+            height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rosco {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            list-style: none;
+            padding: 0;
+        }
+
+        .letra {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: var(--azul-pasapalabra);
+            border: 2px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s;
+        }
+
+        .acertada { background: var(--verde-acierto); box-shadow: 0 0 10px var(--verde-acierto); }
+        .fallada { background: var(--rojo-fallo); box-shadow: 0 0 10px var(--rojo-fallo); }
+        .activa { transform: translate(-50%, -50%) scale(1.3); border-color: var(--naranja-espera); box-shadow: 0 0 15px var(--naranja-espera); z-index: 10; }
+
+        #central-panel {
+            position: absolute;
+            text-align: center;
+            width: 320px;
+            z-index: 5;
+        }
+
+        #timer { font-size: 3.5rem; font-weight: bold; margin-bottom: 10px; text-shadow: 2px 2px 5px black; }
+        
+        #pregunta-box {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 15px;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        #input-area {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-direction: column;
+        }
+
+        .voice-controls {
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: none;
+            text-align: center;
+        }
+
+        .buttons { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
+        
+        button {
+            padding: 10px 15px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        #btn-micro { background: var(--morado-voz); color: white; }
+        #btn-enviar { background: var(--verde-acierto); color: white; }
+        #btn-pasapalabra { background: var(--naranja-espera); color: black; }
+        #btn-start { background: white; color: #1a1a2e; font-size: 1.5rem; padding: 15px 40px; }
+
+        .escuchando {
+            animation: pulse 1.2s infinite;
+            background: #ff4b2b !important;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 75, 43, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 75, 43, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 75, 43, 0); }
+        }
+
+        .hidden { display: none !important; }
+
+        /* Switch styling */
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--morado-voz); }
+        input:checked + .slider:before { transform: translateX(20px); }
+    </style>
+</head>
+<body>
+
+    <h1>PASAPALABRA VOICE 2.0</h1>
+
+    <div id="game-container">
+        <ul class="rosco" id="rosco-letras"></ul>
+        
+        <div id="central-panel">
+            <div id="timer">120</div>
+            <div id="pregunta-box">
+                <span id="texto-pregunta">Cargando estadio...</span>
+                <small id="status-voz" style="margin-top: 10px; color: #ffeb3b; font-weight: bold;"></small>
+            </div>
+            
+            <div id="input-area" class="hidden">
+                <div class="voice-controls">
+                    <span>Auto-Micro</span>
+                    <label class="switch">
+                        <input type="checkbox" id="auto-micro-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <input type="text" id="user-answer" placeholder="Responde..." autocomplete="off">
+                <div class="buttons">
+                    <button id="btn-micro">🎤 MICRO</button>
+                    <button id="btn-enviar">ENVIAR</button>
+                    <button id="btn-pasapalabra">PASAPALABRA</button>
+                </div>
+            </div>
+            
+            <button id="btn-start">EMPEZAR PARTIDO</button>
+        </div>
+    </div>
+
+    <script>
+        const preguntas = [
+            { letra: 'A', respuesta: 'alisson', pregunta: 'Con la A: Portero brasileño del Liverpool.' },
+            { letra: 'B', respuesta: 'benzema', pregunta: 'Con la B: Ganador del Balón de Oro 2022 y ex del Real Madrid.' },
+            { letra: 'C', respuesta: 'courtois', pregunta: 'Con la C: Portero belga decisivo en la Decimocuarta del Real Madrid.' },
+            { letra: 'D', respuesta: 'drogba', pregunta: 'Con la D: Leyenda de Costa de Marfil y del Chelsea.' },
+            { letra: 'E', respuesta: 'eto\'o', pregunta: 'Con la E: Delantero camerunés que brilló en el Barça e Inter.' },
+            { letra: 'F', respuesta: 'foden', pregunta: 'Con la F: Joven estrella inglesa entrenada por Guardiola.' },
+            { letra: 'G', respuesta: 'gavi', pregunta: 'Con la G: Joven centrocampista del Barça, ganador del Golden Boy.' },
+            { letra: 'H', respuesta: 'haaland', pregunta: 'Con la H: El "Androide" noruego del Manchester City.' },
+            { letra: 'I', respuesta: 'iniesta', pregunta: 'Con la I: Marcó el gol más importante de la historia de España.' },
+            { letra: 'J', respuesta: 'joao felix', pregunta: 'Con la J: "O Menino" portugués que pasó por Atleti y Barça.' },
+            { letra: 'K', respuesta: 'kane', pregunta: 'Con la K: Máximo goleador histórico de la selección inglesa.' },
+            { letra: 'L', respuesta: 'lewandowski', pregunta: 'Con la L: Goleador polaco que cambió el Bayern por el Barcelona.' },
+            { letra: 'M', respuesta: 'messi', pregunta: 'Con la M: Ganó el último mundial con Argentina.' },
+            { letra: 'N', respuesta: 'neymar', pregunta: 'Con la N: Estrella brasileña famosa por su Jogo Bonito.' },
+            { letra: 'O', respuesta: 'oblak', pregunta: 'Con la O: Muro esloveno de la portería del Atlético de Madrid.' },
+            { letra: 'P', respuesta: 'puyol', pregunta: 'Con la P: El eterno capitán "tiburón" del F.C. Barcelona.' },
+            { letra: 'Q', respuesta: 'quaresma', pregunta: 'Con la Q: Jugador portugués famoso por sus golpeos de trivela.' },
+            { letra: 'R', respuesta: 'ronaldo', pregunta: 'Con la R: El "Fenómeno" brasileño.' },
+            { letra: 'S', respuesta: 'suarez', pregunta: 'Con la S: "El Pistolero" uruguayo.' },
+            { letra: 'T', respuesta: 'ter stegen', pregunta: 'Con la T: Portero alemán del F.C. Barcelona.' },
+            { letra: 'U', respuesta: 'unai simon', pregunta: 'Con la U: Portero titular de la selección española.' },
+            { letra: 'V', respuesta: 'vinicius', pregunta: 'Con la uve: Extremo brasileño del Real Madrid, autor del gol en la final de París.' },
+            { letra: 'X', respuesta: 'xavi', pregunta: 'Contiene la equis: Leyenda del centro del campo del Barça y España.' },
+            { letra: 'Y', respuesta: 'yashin', pregunta: 'Con la Y: La "Araña Negra", único portero con un Balón de Oro.' },
+            { letra: 'Z', respuesta: 'zidane', pregunta: 'Con la Z: Autor de la mítica volea de la Novena.' }
+        ];
+
+        let currentIndex = 0;
+        let tiempoRestante = 120;
+        let timerInterval;
+        let juegoActivo = false;
+        let sistemaHablando = false;
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        
+        const roscoUI = document.getElementById('rosco-letras');
+        const timerUI = document.getElementById('timer');
+        const preguntaUI = document.getElementById('texto-pregunta');
+        const inputUI = document.getElementById('user-answer');
+        const statusVozUI = document.getElementById('status-voz');
+        const autoMicroToggle = document.getElementById('auto-micro-toggle');
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'es-ES';
+            recognition.interimResults = false;
+
+            recognition.onstart = () => {
+                document.getElementById('btn-micro').classList.add('escuchando');
+                statusVozUI.innerText = "TE ESCUCHO...";
+            };
+
+            recognition.onresult = (event) => {
+                const voiceResult = event.results[0][0].transcript.toLowerCase().trim().replace(/[.\s]/g, '');
+                if (voiceResult === "pasapalabra") {
+                    pasapalabra();
+                } else {
+                    inputUI.value = voiceResult;
+                    statusVozUI.innerText = `HE OÍDO: "${voiceResult}"`;
+                    setTimeout(verificarRespuesta, 600);
+                }
+            };
+
+            recognition.onend = () => {
+                document.getElementById('btn-micro').classList.remove('escuchando');
+                statusVozUI.innerText = "";
+                // Si el auto-micro está activo y el sistema no está hablando, reiniciar
+                if (autoMicroToggle.checked && !sistemaHablando && juegoActivo) {
+                    recognition.start();
+                }
+            };
+        }
+
+        function hablar(texto, callback) {
+            if(recognition) recognition.stop(); // Parar micro mientras habla el sistema
+            sistemaHablando = true;
+            preguntaUI.innerText = "..."; 
+            
+            const utterance = new SpeechSynthesisUtterance(texto);
+            utterance.lang = 'es-ES';
+            utterance.onend = () => {
+                sistemaHablando = false;
+                preguntaUI.innerText = texto;
+                if(callback) callback();
+                // Si auto-micro está activo, empezar a escuchar justo al terminar de hablar
+                if (autoMicroToggle.checked && juegoActivo) recognition.start();
+            };
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function siguientePregunta() {
+            let vueltas = 0;
+            while (preguntas[currentIndex].estado && vueltas < preguntas.length) {
+                currentIndex = (currentIndex + 1) % preguntas.length;
+                vueltas++;
+            }
+
+            if (vueltas === preguntas.length) {
+                finalizarJuego(true);
+                return;
+            }
+
+            document.querySelectorAll('.letra').forEach(l => l.classList.remove('activa'));
+            document.getElementById(`letra-${currentIndex}`).classList.add('activa');
+            
+            hablar(preguntas[currentIndex].pregunta);
+        }
+
+        function verificarRespuesta() {
+            if (sistemaHablando) return;
+
+            const respuestaUser = inputUI.value.toLowerCase().trim().replace(/[.\s]/g, '');
+            if (!respuestaUser) return;
+
+            const actual = preguntas[currentIndex];
+            const letraActual = document.getElementById(`letra-${currentIndex}`);
+            inputUI.value = "";
+
+            if (respuestaUser === actual.respuesta.toLowerCase().replace(/\s/g, '')) {
+                actual.estado = 'acierto';
+                letraActual.classList.add('acertada');
+                siguientePregunta();
+            } else {
+                actual.estado = 'fallo';
+                letraActual.classList.add('fallada');
+                hablar(`Error. La respuesta era ${actual.respuesta}`, () => {
+                    setTimeout(siguientePregunta, 300);
+                });
+            }
+        }
+
+        function pasapalabra() {
+            if (sistemaHablando) return;
+            if(recognition) recognition.stop();
+            hablar("PASAMOS PALABRA", () => {
+                currentIndex = (currentIndex + 1) % preguntas.length;
+                siguientePregunta();
+            });
+        }
+
+        function finalizarJuego(completado) {
+            clearInterval(timerInterval);
+            juegoActivo = false;
+            if(recognition) recognition.stop();
+            const aciertos = preguntas.filter(p => p.estado === 'acierto').length;
+            preguntaUI.innerText = `FIN. ACIERTOS: ${aciertos}`;
+            document.getElementById('input-area').classList.add('hidden');
+        }
+
+        function iniciarCronometro() {
+            timerInterval = setInterval(() => {
+                if (!sistemaHablando && juegoActivo) {
+                    tiempoRestante--;
+                    timerUI.innerText = tiempoRestante;
+                    if (tiempoRestante <= 0) finalizarJuego(false);
+                }
+            }, 1000);
+        }
+
+        function initRosco() {
+            preguntas.forEach((p, i) => {
+                const li = document.createElement('li');
+                li.className = 'letra';
+                li.innerText = p.letra;
+                li.id = `letra-${i}`;
+                const angle = (i * (360 / preguntas.length)) - 90;
+                const radius = 220;
+                li.style.left = `${250 + radius * Math.cos(angle * Math.PI / 180)}px`;
+                li.style.top = `${250 + radius * Math.sin(angle * Math.PI / 180)}px`;
+                roscoUI.appendChild(li);
+            });
+        }
+
+        document.getElementById('btn-start').addEventListener('click', () => {
+            document.getElementById('btn-start').classList.add('hidden');
+            document.getElementById('input-area').classList.remove('hidden');
+            juegoActivo = true;
+            initRosco();
+            iniciarCronometro();
+            siguientePregunta();
+        });
+
+        document.getElementById('btn-micro').addEventListener('click', () => {
+            if (!recognition) return alert("Micro no soportado");
+            recognition.start();
+        });
+
+        document.getElementById('btn-enviar').addEventListener('click', verificarRespuesta);
+        document.getElementById('btn-pasapalabra').addEventListener('click', pasapalabra);
+        inputUI.addEventListener('keypress', (e) => { if(e.key === 'Enter') verificarRespuesta(); });
+    </script>
+</body>
+</html>
