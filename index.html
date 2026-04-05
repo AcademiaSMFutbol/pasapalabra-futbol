@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pasapalabra Fútbol Pro - Versión Corregida</title>
+    <title>Pasapalabra Fútbol - Anti Eco</title>
     <style>
         :root {
             --azul-pasapalabra: #0056b3;
@@ -99,6 +99,7 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
+            color: #00ffcc;
         }
 
         input[type="text"] {
@@ -125,13 +126,13 @@
         #btn-start { background: white; color: #1a1a2e; font-size: 1.5rem; padding: 15px 40px; }
 
         .escuchando {
-            animation: pulse 1.2s infinite;
+            animation: pulse 1s infinite;
             background: #ff4b2b !important;
         }
 
         @keyframes pulse {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 75, 43, 0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 75, 43, 0); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(255, 75, 43, 0); }
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 75, 43, 0); }
         }
 
@@ -154,10 +155,10 @@
             
             <div id="input-area" class="hidden">
                 <div class="voice-controls">
-                    <span>Auto-Escucha</span>
+                    <span>Auto-Escucha Activa</span>
                     <input type="checkbox" id="auto-micro-toggle" checked>
                 </div>
-                <input type="text" id="user-answer" placeholder="Dí el nombre..." autocomplete="off">
+                <input type="text" id="user-answer" placeholder="Responde..." autocomplete="off">
                 <div class="buttons">
                     <button id="btn-micro">🎤</button>
                     <button id="btn-enviar">OK</button>
@@ -170,7 +171,6 @@
     </div>
 
     <script>
-        // Banco de datos corregido y ampliado
         const bancoPreguntas = {
             'A': [{ r: 'alisson', p: 'Con la A: Portero brasileño del Liverpool.' }, { r: 'araujo', p: 'Con la A: Defensa uruguayo del Barça.' }],
             'B': [{ r: 'benzema', p: 'Con la B: Ex delantero del Real Madrid, ganador del Balón de Oro.' }, { r: 'busquets', p: 'Con la B: Leyenda del centro del campo culé.' }],
@@ -205,6 +205,7 @@
         let timerInterval;
         let juegoActivo = false;
         let sistemaHablando = false;
+        const TIEMPO_ESPERA_MICRO = 800; // Milisegundos de retraso para evitar eco
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition;
@@ -216,12 +217,11 @@
         const statusVozUI = document.getElementById('status-voz');
         const autoMicroToggle = document.getElementById('auto-micro-toggle');
 
-        // Función para limpiar texto (quita acentos, espacios y signos)
         function limpiarTexto(texto) {
             return texto.toLowerCase()
                 .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "") // Quita tildes
-                .replace(/[^a-z0-9]/g, ""); // Quita todo lo que no sea letra o número
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^a-z0-9]/g, "");
         }
 
         if (SpeechRecognition) {
@@ -235,20 +235,32 @@
             };
 
             recognition.onresult = (event) => {
+                // Bloqueo adicional: si por casualidad el micro capta algo mientras el sistema habla
+                if (sistemaHablando) return;
+
                 const voiceResult = event.results[0][0].transcript;
+                
+                // Ignorar ruidos de una sola letra o vacíos que puedan ser ecos
+                if (voiceResult.length < 2) return;
+
                 inputUI.value = voiceResult;
                 statusVozUI.innerText = `OÍDO: "${voiceResult}"`;
+                
                 if (limpiarTexto(voiceResult).includes("pasapalabra")) {
                     pasapalabra();
                 } else {
-                    setTimeout(verificarRespuesta, 500);
+                    setTimeout(verificarRespuesta, 400);
                 }
             };
 
             recognition.onend = () => {
                 document.getElementById('btn-micro').classList.remove('escuchando');
+                statusVozUI.innerText = "";
+                // Reinicio retardado si está en modo auto
                 if (autoMicroToggle.checked && !sistemaHablando && juegoActivo) {
-                    try { recognition.start(); } catch(e){}
+                    setTimeout(() => {
+                        if (!sistemaHablando && juegoActivo) try { recognition.start(); } catch(e){}
+                    }, TIEMPO_ESPERA_MICRO);
                 }
             };
         }
@@ -257,15 +269,21 @@
             if(recognition) try { recognition.stop(); } catch(e){}
             sistemaHablando = true;
             preguntaUI.innerText = "..."; 
+            
             const utterance = new SpeechSynthesisUtterance(texto);
             utterance.lang = 'es-ES';
-            utterance.rate = 1.1; // Un poco más rápido para dar ritmo
+            utterance.rate = 1.1;
             
             utterance.onend = () => {
-                sistemaHablando = false;
-                preguntaUI.innerText = texto;
-                if(callback) callback();
-                if (autoMicroToggle.checked && juegoActivo) try { recognition.start(); } catch(e){}
+                // Pequeña pausa extra después de que la síntesis termina físicamente
+                setTimeout(() => {
+                    sistemaHablando = false;
+                    preguntaUI.innerText = texto;
+                    if(callback) callback();
+                    if (autoMicroToggle.checked && juegoActivo) {
+                        try { recognition.start(); } catch(e){}
+                    }
+                }, TIEMPO_ESPERA_MICRO); 
             };
             window.speechSynthesis.speak(utterance);
         }
@@ -289,8 +307,6 @@
             const letraUI = document.getElementById(`letra-${currentIndex}`);
             inputUI.value = "";
 
-            // Comparación relajada: si la respuesta del usuario contiene la respuesta correcta
-            // o viceversa (para captar "es messi" o "lionel messi")
             if (resUser.includes(resCorrecta) || resCorrecta.includes(resUser)) {
                 actual.estado = 'acierto';
                 letraUI.classList.add('acertada');
@@ -299,7 +315,7 @@
                 actual.estado = 'fallo';
                 letraUI.classList.add('fallada');
                 hablar(`Error. Era ${actual.respuesta}`, () => {
-                    setTimeout(siguientePregunta, 300);
+                    setTimeout(siguientePregunta, 200);
                 });
             }
         }
@@ -330,8 +346,9 @@
         function finalizarJuego(comp) {
             clearInterval(timerInterval);
             juegoActivo = false;
+            if(recognition) try { recognition.stop(); } catch(e){}
             const aciertos = preguntasPartida.filter(p => p.estado === 'acierto').length;
-            preguntaUI.innerText = `FIN DEL PARTIDO. Aciertos: ${aciertos}`;
+            preguntaUI.innerText = `FIN. Aciertos: ${aciertos}`;
             document.getElementById('input-area').classList.add('hidden');
             document.getElementById('btn-start').classList.remove('hidden');
         }
@@ -369,7 +386,7 @@
         });
 
         document.getElementById('btn-micro').addEventListener('click', () => {
-            try { recognition.start(); } catch(e){}
+            if (!sistemaHablando) try { recognition.start(); } catch(e){}
         });
         document.getElementById('btn-enviar').addEventListener('click', verificarRespuesta);
         document.getElementById('btn-pasapalabra').addEventListener('click', pasapalabra);
