@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pasapalabra Fútbol - Modo Manos Libres</title>
+    <title>Pasapalabra Fútbol - Mega Edition</title>
     <style>
         :root {
             --azul-pasapalabra: #0056b3;
@@ -46,8 +46,8 @@
 
         .letra {
             position: absolute;
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             background: var(--azul-pasapalabra);
             border: 2px solid white;
             border-radius: 50%;
@@ -55,7 +55,7 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             transform: translate(-50%, -50%);
             transition: all 0.3s;
         }
@@ -138,7 +138,6 @@
 
         .hidden { display: none !important; }
 
-        /* Switch styling */
         .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
@@ -149,7 +148,7 @@
 </head>
 <body>
 
-    <h1>PASAPALABRA VOICE 2.0</h1>
+    <h1>PASAPALABRA FOOTBALL PRO</h1>
 
     <div id="game-container">
         <ul class="rosco" id="rosco-letras"></ul>
@@ -157,13 +156,13 @@
         <div id="central-panel">
             <div id="timer">120</div>
             <div id="pregunta-box">
-                <span id="texto-pregunta">Cargando estadio...</span>
+                <span id="texto-pregunta">Banco de preguntas listo. ¡Pulsa empezar!</span>
                 <small id="status-voz" style="margin-top: 10px; color: #ffeb3b; font-weight: bold;"></small>
             </div>
             
             <div id="input-area" class="hidden">
                 <div class="voice-controls">
-                    <span>Auto-Micro</span>
+                    <span>Auto-Micro (GitHub/HTTPS recomendado)</span>
                     <label class="switch">
                         <input type="checkbox" id="auto-micro-toggle" checked>
                         <span class="slider"></span>
@@ -182,34 +181,186 @@
     </div>
 
     <script>
-        const preguntas = [
-            { letra: 'A', respuesta: 'alisson', pregunta: 'Con la A: Portero brasileño del Liverpool.' },
-            { letra: 'B', respuesta: 'benzema', pregunta: 'Con la B: Ganador del Balón de Oro 2022 y ex del Real Madrid.' },
-            { letra: 'C', respuesta: 'courtois', pregunta: 'Con la C: Portero belga decisivo en la Decimocuarta del Real Madrid.' },
-            { letra: 'D', respuesta: 'drogba', pregunta: 'Con la D: Leyenda de Costa de Marfil y del Chelsea.' },
-            { letra: 'E', respuesta: 'eto\'o', pregunta: 'Con la E: Delantero camerunés que brilló en el Barça e Inter.' },
-            { letra: 'F', respuesta: 'foden', pregunta: 'Con la F: Joven estrella inglesa entrenada por Guardiola.' },
-            { letra: 'G', respuesta: 'gavi', pregunta: 'Con la G: Joven centrocampista del Barça, ganador del Golden Boy.' },
-            { letra: 'H', respuesta: 'haaland', pregunta: 'Con la H: El "Androide" noruego del Manchester City.' },
-            { letra: 'I', respuesta: 'iniesta', pregunta: 'Con la I: Marcó el gol más importante de la historia de España.' },
-            { letra: 'J', respuesta: 'joao felix', pregunta: 'Con la J: "O Menino" portugués que pasó por Atleti y Barça.' },
-            { letra: 'K', respuesta: 'kane', pregunta: 'Con la K: Máximo goleador histórico de la selección inglesa.' },
-            { letra: 'L', respuesta: 'lewandowski', pregunta: 'Con la L: Goleador polaco que cambió el Bayern por el Barcelona.' },
-            { letra: 'M', respuesta: 'messi', pregunta: 'Con la M: Ganó el último mundial con Argentina.' },
-            { letra: 'N', respuesta: 'neymar', pregunta: 'Con la N: Estrella brasileña famosa por su Jogo Bonito.' },
-            { letra: 'O', respuesta: 'oblak', pregunta: 'Con la O: Muro esloveno de la portería del Atlético de Madrid.' },
-            { letra: 'P', respuesta: 'puyol', pregunta: 'Con la P: El eterno capitán "tiburón" del F.C. Barcelona.' },
-            { letra: 'Q', respuesta: 'quaresma', pregunta: 'Con la Q: Jugador portugués famoso por sus golpeos de trivela.' },
-            { letra: 'R', respuesta: 'ronaldo', pregunta: 'Con la R: El "Fenómeno" brasileño.' },
-            { letra: 'S', respuesta: 'suarez', pregunta: 'Con la S: "El Pistolero" uruguayo.' },
-            { letra: 'T', respuesta: 'ter stegen', pregunta: 'Con la T: Portero alemán del F.C. Barcelona.' },
-            { letra: 'U', respuesta: 'unai simon', pregunta: 'Con la U: Portero titular de la selección española.' },
-            { letra: 'V', respuesta: 'vinicius', pregunta: 'Con la uve: Extremo brasileño del Real Madrid, autor del gol en la final de París.' },
-            { letra: 'X', respuesta: 'xavi', pregunta: 'Contiene la equis: Leyenda del centro del campo del Barça y España.' },
-            { letra: 'Y', respuesta: 'yashin', pregunta: 'Con la Y: La "Araña Negra", único portero con un Balón de Oro.' },
-            { letra: 'Z', respuesta: 'zidane', pregunta: 'Con la Z: Autor de la mítica volea de la Novena.' }
-        ];
+        // BANCO DE DATOS EXTENDIDO
+        const bancoPreguntas = {
+            'A': [
+                { respuesta: 'alisson', pregunta: 'Con la A: Portero brasileño del Liverpool.' },
+                { respuesta: 'aguero', pregunta: 'Con la A: El "Kun", máximo goleador extranjero de la Premier League.' },
+                { respuesta: 'araujo', pregunta: 'Con la A: Defensa central uruguayo del F.C. Barcelona.' },
+                { respuesta: 'asensio', pregunta: 'Con la A: Jugador español con un gran golpeo de zurda que jugó en el Madrid y PSG.' },
+                { respuesta: 'aubameyang', pregunta: 'Con la A: Delantero gabonés que brilló en el Dortmund y Arsenal.' }
+            ],
+            'B': [
+                { respuesta: 'benzema', pregunta: 'Con la B: Ganador del Balón de Oro 2022 y ex del Real Madrid.' },
+                { respuesta: 'busquets', pregunta: 'Con la B: El ancla del mejor Barça de la historia en el centro del campo.' },
+                { respuesta: 'bellingham', pregunta: 'Con la B: Estrella inglesa que llegó al Real Madrid procedente del Dortmund.' },
+                { respuesta: 'buffon', pregunta: 'Con la B: Legendario portero italiano campeón del mundo en 2006.' },
+                { respuesta: 'bale', pregunta: 'Con la B: El "Expreso de Cardiff", autor de un gol de chilena en una final de Champions.' }
+            ],
+            'C': [
+                { respuesta: 'courtois', pregunta: 'Con la C: Portero belga decisivo en la Decimocuarta del Real Madrid.' },
+                { respuesta: 'casemiro', pregunta: 'Con la C: Centrocampista brasileño que formó un trío histórico con Kroos y Modric.' },
+                { respuesta: 'cavani', pregunta: 'Con la C: El "Matador" uruguayo.' },
+                { respuesta: 'cruyff', pregunta: 'Con la C: El holandés que cambió la historia del fútbol moderno y del Barça.' },
+                { respuesta: 'casillas', pregunta: 'Con la C: "El Santo" de la portería española.' }
+            ],
+            'D': [
+                { respuesta: 'drogba', pregunta: 'Con la D: Leyenda de Costa de Marfil y del Chelsea.' },
+                { respuesta: 'di maria', pregunta: 'Con la D: El "Fideo", marcó en casi todas las finales que ganó Argentina.' },
+                { respuesta: 'de bruyne', pregunta: 'Con la D: El director de orquesta belga del Manchester City.' },
+                { respuesta: 'dybala', pregunta: 'Con la D: "La Joya" argentina, zurdo con mucha clase.' },
+                { respuesta: 'donnarumma', pregunta: 'Con la D: Portero italiano héroe de la Eurocopa 2020.' }
+            ],
+            'E': [
+                { respuesta: 'eto\'o', pregunta: 'Con la E: Delantero camerunés que ganó el triplete con Barça e Inter.' },
+                { respuesta: 'ederson', pregunta: 'Con la E: Portero brasileño famoso por su gran juego de pies en el City.' },
+                { respuesta: 'eriksen', pregunta: 'Con la E: Centrocampista danés con una visión de juego privilegiada.' },
+                { respuesta: 'enzo', pregunta: 'Con la E: Apellido del centrocampista argentino que fue mejor joven del Mundial 2022.' },
+                { respuesta: 'emre can', pregunta: 'Con la E: Centrocampista alemán que ha pasado por Liverpool, Juve y Dortmund.' }
+            ],
+            'F': [
+                { respuesta: 'foden', pregunta: 'Con la F: El joven talento inglés llamado el "Stockport Iniesta".' },
+                { respuesta: 'forlan', pregunta: 'Con la F: Balón de Oro del Mundial 2010 y goleador uruguayo.' },
+                { respuesta: 'figo', pregunta: 'Con la F: Extremo portugués que protagonizó el fichaje más polémico entre Barça y Madrid.' },
+                { respuesta: 'falcao', pregunta: 'Con la F: "El Tigre" colombiano que dominó el área con el Atleti.' },
+                { respuesta: 'fabregas', pregunta: 'Con la F: Centrocampista catalán que asistió a Iniesta en el gol del Mundial.' }
+            ],
+            'G': [
+                { respuesta: 'gavi', pregunta: 'Con la G: Joven centrocampista del Barça conocido por su garra.' },
+                { respuesta: 'griezmann', pregunta: 'Con la G: "El Principito" francés del Atlético de Madrid.' },
+                { respuesta: 'guardiola', pregunta: 'Con la G: Mítico jugador y entrenador que lo ganó todo con el Barça.' },
+                { respuesta: 'gundogan', pregunta: 'Con la G: Capitán alemán que levantó la Champions con el City.' },
+                { respuesta: 'garrincha', pregunta: 'Con la G: Legendario regateador brasileño apodado "La alegría del pueblo".' }
+            ],
+            'H': [
+                { respuesta: 'haaland', pregunta: 'Con la H: El delantero noruego que rompe récords de goles en Inglaterra.' },
+                { respuesta: 'hazard', pregunta: 'Con la H: Estrella belga que brilló en el Chelsea pero no tuvo suerte en el Madrid.' },
+                { respuesta: 'henry', pregunta: 'Con la H: "Tití", máximo goleador histórico del Arsenal y leyenda francesa.' },
+                { respuesta: 'hakimi', pregunta: 'Con la H: Lateral marroquí nacido en Madrid que destaca por su velocidad.' },
+                { respuesta: 'hernandez', pregunta: 'Con la H: Apellido de Theo o Lucas, hermanos y defensas franceses.' }
+            ],
+            'I': [
+                { respuesta: 'iniesta', pregunta: 'Con la I: Autor del gol que dio a España su primer Mundial.' },
+                { respuesta: 'ibrahimovic', pregunta: 'Con la I: Zlatan, delantero sueco famoso por sus acrobacias y su ego.' },
+                { respuesta: 'isco', pregunta: 'Con la I: Magia andaluza en el centro del campo, ex del Madrid y Betis.' },
+                { respuesta: 'immobile', pregunta: 'Con la I: Goleador histórico de la Lazio y bota de oro italiana.' },
+                { respuesta: 'icardi', pregunta: 'Con la I: Delantero argentino que ha pasado por Inter, PSG y Galatasaray.' }
+            ],
+            'J': [
+                { respuesta: 'joao felix', pregunta: 'Con la J: Joven talento portugués apodado "O Menino".' },
+                { respuesta: 'jorginho', pregunta: 'Con la J: Centrocampista italo-brasileño que ganó Champions y Eurocopa el mismo año.' },
+                { respuesta: 'james', pregunta: 'Con la J: Colombiano que marcó el mejor gol del Mundial 2014.' },
+                { respuesta: 'jairzinho', pregunta: 'Con la J: El único jugador que marcó en todos los partidos de un Mundial (1970).' },
+                { respuesta: 'jordi alba', pregunta: 'Con la J: Lateral izquierdo que formó una pareja letal con Messi.' }
+            ],
+            'K': [
+                { respuesta: 'kane', pregunta: 'Con la K: Máximo goleador histórico de la selección inglesa y del Tottenham.' },
+                { respuesta: 'kroos', pregunta: 'Con la K: El "Francotirador" alemán, leyenda del Real Madrid.' },
+                { respuesta: 'kante', pregunta: 'Con la K: El centrocampista francés que parecía estar en todas partes del campo.' },
+                { respuesta: 'kaka', pregunta: 'Con la K: Último brasileño en ganar el Balón de Oro antes de la era Messi-Cristiano.' },
+                { respuesta: 'kimmich', pregunta: 'Con la K: El polivalente cerebro del Bayern de Múnich.' }
+            ],
+            'L': [
+                { respuesta: 'lewandowski', pregunta: 'Con la L: Goleador polaco ganador de dos premios The Best.' },
+                { respuesta: 'lautaro', pregunta: 'Con la L: "El Toro" argentino, capitán y goleador del Inter.' },
+                { respuesta: 'lampard', pregunta: 'Con la L: Centrocampista inglés máximo goleador de la historia del Chelsea.' },
+                { respuesta: 'leao', pregunta: 'Con la L: Extremo portugués con una velocidad y potencia descomunales en el Milan.' },
+                { respuesta: 'luis suarez', pregunta: 'Con la L: "El Pistolero" uruguayo que ganó la bota de oro con el Barça.' }
+            ],
+            'M': [
+                { respuesta: 'messi', pregunta: 'Con la M: Ganó el último mundial con Argentina y 8 Balones de Oro.' },
+                { respuesta: 'modric', pregunta: 'Con la M: El genio croata que rompió la hegemonía del Balón de Oro en 2018.' },
+                { respuesta: 'mbappe', pregunta: 'Con la M: La estrella francesa que marcó un hat-trick en la final del Mundial 2022.' },
+                { respuesta: 'maradona', pregunta: 'Con la M: El "D10S" argentino, autor de la Mano de Dios.' },
+                { respuesta: 'muller', pregunta: 'Con la M: Thomas, el jugador alemán famoso por sus "espacios" en el Bayern.' }
+            ],
+            'N': [
+                { respuesta: 'neymar', pregunta: 'Con la N: Estrella brasileña famosa por su Jogo Bonito.' },
+                { respuesta: 'neuer', pregunta: 'Con la N: Portero alemán que revolucionó el puesto jugando como líbero.' },
+                { respuesta: 'nkunku', pregunta: 'Con la N: Talentoso atacante francés que brilló en el Leipzig antes de ir al Chelsea.' },
+                { respuesta: 'navas', pregunta: 'Con la N: Portero costarricense ganador de 3 Champions consecutivas con el Madrid.' },
+                { respuesta: 'nesta', pregunta: 'Con la N: Elegante defensa central italiano del Milan y la selección.' }
+            ],
+            'O': [
+                { respuesta: 'oblak', pregunta: 'Con la O: El muro esloveno del Atlético de Madrid.' },
+                { respuesta: 'ozil', pregunta: 'Con la O: El "Mago de Oz", asistente alemán con una visión de juego única.' },
+                { respuesta: 'odegaard', pregunta: 'Con la O: Capitán del Arsenal que llegó muy joven al Real Madrid.' },
+                { respuesta: 'oshimen', pregunta: 'Con la O: Delantero nigeriano clave en el Scudetto del Nápoles.' },
+                { respuesta: 'owen', pregunta: 'Con la O: El "Golden Boy" inglés que ganó el Balón de Oro siendo muy joven.' }
+            ],
+            'P': [
+                { respuesta: 'puyol', pregunta: 'Con la P: El eterno capitán de la zaga del Barça y España.' },
+                { respuesta: 'pele', pregunta: 'Con la P: El "Rey" del fútbol, único en ganar 3 Mundiales.' },
+                { respuesta: 'pirlo', pregunta: 'Con la P: El "Maestro" italiano que ponía la pelota donde quería.' },
+                { respuesta: 'pedri', pregunta: 'Con la P: Joven canario del Barça con un juego parecido al de Iniesta.' },
+                { respuesta: 'pogba', pregunta: 'Con la P: Centrocampista francés con gran despliegue físico y técnico.' }
+            ],
+            'Q': [
+                { respuesta: 'quaresma', pregunta: 'Con la Q: Jugador portugués experto en el golpeo de trivela.' },
+                { respuesta: 'quini', pregunta: 'Con la Q: "El Brujo", mítico goleador español del Sporting y Barça.' },
+                { respuesta: 'quagliarella', pregunta: 'Con la Q: Eterno goleador italiano que seguía marcando con más de 38 años.' },
+                { respuesta: 'queretaro', pregunta: 'Con la Q: Nombre del club mexicano donde jugó Ronaldinho en su etapa final.' },
+                { respuesta: 'quintero', pregunta: 'Con la Q: Juanfer, zurdo colombiano héroe de River en Madrid.' }
+            ],
+            'R': [
+                { respuesta: 'ronaldo', pregunta: 'Con la R: Cristiano, máximo goleador histórico de la Champions y el fútbol.' },
+                { respuesta: 'ronaldinho', pregunta: 'Con la R: El brasileño que devolvió la sonrisa al Camp Nou.' },
+                { respuesta: 'raul', pregunta: 'Con la R: "El Ángel de Madrid", mítico 7 de España y el Real Madrid.' },
+                { respuesta: 'rodrigo', pregunta: 'Con la R: Centrocampista español del City, clave en la final de Champions 2023.' },
+                { respuesta: 'ribery', pregunta: 'Con la R: Extremo francés que formó una pareja mítica con Robben en el Bayern.' }
+            ],
+            'S': [
+                { respuesta: 'salah', pregunta: 'Con la S: El "Faraón" egipcio del Liverpool.' },
+                { respuesta: 'suarez', pregunta: 'Con la S: Luis, el delantero uruguayo que mordía en el área.' },
+                { respuesta: 'saka', pregunta: 'Con la S: La joven estrella inglesa que brilla en el Arsenal.' },
+                { respuesta: 'stoichkov', pregunta: 'Con la S: Búlgaro con mucho carácter y Balón de Oro en el Barça.' },
+                { respuesta: 'son', pregunta: 'Con la S: Jugador surcoreano, estrella y goleador del Tottenham.' }
+            ],
+            'T': [
+                { respuesta: 'ter stegen', pregunta: 'Con la T: El portero alemán que parece un central más en el Barça.' },
+                { respuesta: 'totti', pregunta: 'Con la T: "Il Capitano", que jugó toda su vida en la Roma.' },
+                { respuesta: 'thierry henry', pregunta: 'Con la T: Delantero francés elegante e imparable en el Arsenal.' },
+                { respuesta: 'thiago', pregunta: 'Con la T: Centrocampista hispano-brasileño con una técnica exquisita.' },
+                { respuesta: 'theo hernandez', pregunta: 'Con la T: Lateral zurdo francés con una potencia increíble en el Milan.' }
+            ],
+            'U': [
+                { respuesta: 'unai simon', pregunta: 'Con la U: El portero de España en el Mundial de Qatar y la Euro 2024.' },
+                { respuesta: 'upamecano', pregunta: 'Con la U: Potente defensa central francés del Bayern.' },
+                { respuesta: 'umtiti', pregunta: 'Con la U: Defensa francés campeón del mundo que destacó en el Barça antes de las lesiones.' },
+                { respuesta: 'ugo sanchez', pregunta: 'Con la U: Delantero mexicano del Real Madrid famoso por sus remates al primer toque.' },
+                { respuesta: 'uribe', pregunta: 'Con la U: Centrocampista colombiano que ha jugado en el Oporto.' }
+            ],
+            'V': [
+                { respuesta: 'vinicius', pregunta: 'Con la uve: Extremo brasileño del Real Madrid, estrella actual de la Champions.' },
+                { respuesta: 'van dijk', pregunta: 'Con la uve: El muro neerlandés que lideró la defensa del Liverpool.' },
+                { respuesta: 'valverde', pregunta: 'Con la uve: "El Halcón" uruguayo del Real Madrid con un disparo potente.' },
+                { respuesta: 'van basten', pregunta: 'Con la uve: Legendario goleador holandés que marcó una volea imposible en la Euro 88.' },
+                { respuesta: 'viera', pregunta: 'Con la uve: Patrick, el capitán de los invencibles del Arsenal.' }
+            ],
+            'X': [
+                { respuesta: 'xavi', pregunta: 'Contiene la equis: El cerebro del mejor Barça y la selección española.' },
+                { respuesta: 'xabi alonso', pregunta: 'Contiene la equis: Maestro del pase largo que jugó en Liverpool, Madrid y Bayern.' },
+                { respuesta: 'xhaka', pregunta: 'Contiene la equis: Centrocampista suizo con mucha personalidad, ex del Arsenal.' },
+                { respuesta: 'alexis sanchez', pregunta: 'Contiene la equis: El "Niño Maravilla" chileno.' },
+                { respuesta: 'mexes', pregunta: 'Contiene la equis: Defensa central francés que jugó en la Roma y el Milan.' }
+            ],
+            'Y': [
+                { respuesta: 'yashin', pregunta: 'Con la Y: La "Araña Negra", único portero con un Balón de Oro.' },
+                { respuesta: 'yaya toure', pregunta: 'Con la Y: Centrocampista marfileño dominante físicamente en el Barça y City.' },
+                { respuesta: 'yamal', pregunta: 'Con la Y: Lamine, la perla adolescente que rompe récords en el Barça.' },
+                { respuesta: 'yepez', pregunta: 'Con la Y: Capitán histórico de la defensa de Colombia.' },
+                { respuesta: 'yildiz', pregunta: 'Con la Y: Joven promesa turca que brilla en la Juventus.' }
+            ],
+            'Z': [
+                { respuesta: 'zidane', pregunta: 'Con la Z: "Zizou", leyenda francesa y entrenador de las 3 Champions.' },
+                { respuesta: 'zanetti', pregunta: 'Con la Z: "El Pupi", eterno capitán argentino del Inter de Milán.' },
+                { respuesta: 'zico', pregunta: 'Con la Z: El "Pelé Blanco", estrella brasileña de los años 80.' },
+                { respuesta: 'zamorano', pregunta: 'Con la Z: "Bam Bam", gran cabeceador chileno del Real Madrid e Inter.' },
+                { respuesta: 'zubizarreta', pregunta: 'Con la Z: Portero español con más partidos en la historia de la liga.' }
+            ]
+        };
 
+        let preguntasPartida = [];
         let currentIndex = 0;
         let tiempoRestante = 120;
         let timerInterval;
@@ -226,6 +377,20 @@
         const statusVozUI = document.getElementById('status-voz');
         const autoMicroToggle = document.getElementById('auto-micro-toggle');
 
+        function seleccionarPreguntasAleatorias() {
+            preguntasPartida = [];
+            const letras = Object.keys(bancoPreguntas).sort();
+            letras.forEach(letra => {
+                const opciones = bancoPreguntas[letra];
+                const elegida = opciones[Math.floor(Math.random() * opciones.length)];
+                preguntasPartida.push({
+                    letra: letra,
+                    ...elegida,
+                    estado: null
+                });
+            });
+        }
+
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();
             recognition.lang = 'es-ES';
@@ -237,8 +402,8 @@
             };
 
             recognition.onresult = (event) => {
-                const voiceResult = event.results[0][0].transcript.toLowerCase().trim().replace(/[.\s]/g, '');
-                if (voiceResult === "pasapalabra") {
+                const voiceResult = event.results[0][0].transcript.toLowerCase().trim();
+                if (voiceResult.includes("pasapalabra")) {
                     pasapalabra();
                 } else {
                     inputUI.value = voiceResult;
@@ -250,66 +415,63 @@
             recognition.onend = () => {
                 document.getElementById('btn-micro').classList.remove('escuchando');
                 statusVozUI.innerText = "";
-                // Si el auto-micro está activo y el sistema no está hablando, reiniciar
                 if (autoMicroToggle.checked && !sistemaHablando && juegoActivo) {
-                    recognition.start();
+                    try { recognition.start(); } catch(e){}
                 }
             };
         }
 
         function hablar(texto, callback) {
-            if(recognition) recognition.stop(); // Parar micro mientras habla el sistema
+            if(recognition) recognition.stop();
             sistemaHablando = true;
             preguntaUI.innerText = "..."; 
-            
             const utterance = new SpeechSynthesisUtterance(texto);
             utterance.lang = 'es-ES';
             utterance.onend = () => {
                 sistemaHablando = false;
                 preguntaUI.innerText = texto;
                 if(callback) callback();
-                // Si auto-micro está activo, empezar a escuchar justo al terminar de hablar
-                if (autoMicroToggle.checked && juegoActivo) recognition.start();
+                if (autoMicroToggle.checked && juegoActivo) try { recognition.start(); } catch(e){}
             };
             window.speechSynthesis.speak(utterance);
         }
 
         function siguientePregunta() {
             let vueltas = 0;
-            while (preguntas[currentIndex].estado && vueltas < preguntas.length) {
-                currentIndex = (currentIndex + 1) % preguntas.length;
+            while (preguntasPartida[currentIndex].estado && vueltas < preguntasPartida.length) {
+                currentIndex = (currentIndex + 1) % preguntasPartida.length;
                 vueltas++;
             }
 
-            if (vueltas === preguntas.length) {
+            if (vueltas === preguntasPartida.length) {
                 finalizarJuego(true);
                 return;
             }
 
             document.querySelectorAll('.letra').forEach(l => l.classList.remove('activa'));
             document.getElementById(`letra-${currentIndex}`).classList.add('activa');
-            
-            hablar(preguntas[currentIndex].pregunta);
+            hablar(preguntasPartida[currentIndex].pregunta);
         }
 
         function verificarRespuesta() {
             if (sistemaHablando) return;
+            const resUser = inputUI.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+            if (!resUser) return;
 
-            const respuestaUser = inputUI.value.toLowerCase().trim().replace(/[.\s]/g, '');
-            if (!respuestaUser) return;
-
-            const actual = preguntas[currentIndex];
+            const actual = preguntasPartida[currentIndex];
             const letraActual = document.getElementById(`letra-${currentIndex}`);
+            const resCorrecta = actual.respuesta.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            
             inputUI.value = "";
 
-            if (respuestaUser === actual.respuesta.toLowerCase().replace(/\s/g, '')) {
+            if (resUser === resCorrecta) {
                 actual.estado = 'acierto';
                 letraActual.classList.add('acertada');
                 siguientePregunta();
             } else {
                 actual.estado = 'fallo';
                 letraActual.classList.add('fallada');
-                hablar(`Error. La respuesta era ${actual.respuesta}`, () => {
+                hablar(`Error. Era ${actual.respuesta}`, () => {
                     setTimeout(siguientePregunta, 300);
                 });
             }
@@ -319,18 +481,9 @@
             if (sistemaHablando) return;
             if(recognition) recognition.stop();
             hablar("PASAMOS PALABRA", () => {
-                currentIndex = (currentIndex + 1) % preguntas.length;
+                currentIndex = (currentIndex + 1) % preguntasPartida.length;
                 siguientePregunta();
             });
-        }
-
-        function finalizarJuego(completado) {
-            clearInterval(timerInterval);
-            juegoActivo = false;
-            if(recognition) recognition.stop();
-            const aciertos = preguntas.filter(p => p.estado === 'acierto').length;
-            preguntaUI.innerText = `FIN. ACIERTOS: ${aciertos}`;
-            document.getElementById('input-area').classList.add('hidden');
         }
 
         function iniciarCronometro() {
@@ -343,32 +496,46 @@
             }, 1000);
         }
 
-        function initRosco() {
-            preguntas.forEach((p, i) => {
+        function initRoscoUI() {
+            roscoUI.innerHTML = "";
+            preguntasPartida.forEach((p, i) => {
                 const li = document.createElement('li');
                 li.className = 'letra';
                 li.innerText = p.letra;
                 li.id = `letra-${i}`;
-                const angle = (i * (360 / preguntas.length)) - 90;
-                const radius = 220;
-                li.style.left = `${250 + radius * Math.cos(angle * Math.PI / 180)}px`;
-                li.style.top = `${250 + radius * Math.sin(angle * Math.PI / 180)}px`;
+                const angle = (i * (360 / preguntasPartida.length)) - 90;
+                li.style.left = `${250 + 220 * Math.cos(angle * Math.PI / 180)}px`;
+                li.style.top = `${250 + 220 * Math.sin(angle * Math.PI / 180)}px`;
                 roscoUI.appendChild(li);
             });
+        }
+
+        function finalizarJuego(completado) {
+            clearInterval(timerInterval);
+            juegoActivo = false;
+            if(recognition) recognition.stop();
+            const aciertos = preguntasPartida.filter(p => p.estado === 'acierto').length;
+            preguntaUI.innerText = `RESULTADO: ${aciertos} aciertos.`;
+            document.getElementById('input-area').classList.add('hidden');
+            document.getElementById('btn-start').innerText = "JUGAR OTRA VEZ";
+            document.getElementById('btn-start').classList.remove('hidden');
         }
 
         document.getElementById('btn-start').addEventListener('click', () => {
             document.getElementById('btn-start').classList.add('hidden');
             document.getElementById('input-area').classList.remove('hidden');
+            tiempoRestante = 120;
+            currentIndex = 0;
             juegoActivo = true;
-            initRosco();
+            seleccionarPreguntasAleatorias();
+            initRoscoUI();
             iniciarCronometro();
             siguientePregunta();
         });
 
         document.getElementById('btn-micro').addEventListener('click', () => {
             if (!recognition) return alert("Micro no soportado");
-            recognition.start();
+            try { recognition.start(); } catch(e){}
         });
 
         document.getElementById('btn-enviar').addEventListener('click', verificarRespuesta);
