@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pasapalabra Fútbol - Gran Final</title>
+    <title>Pasapalabra Fútbol - 150 Jugadores</title>
     <style>
         :root {
             --azul-pasapalabra: #0056b3;
@@ -28,52 +28,47 @@
 
         #game-container { position: relative; width: 600px; height: 600px; display: flex; align-items: center; justify-content: center; }
         .rosco { position: relative; width: 500px; height: 500px; border-radius: 50%; list-style: none; padding: 0; }
-        .letra { position: absolute; width: 38px; height: 38px; background: var(--azul-pasapalabra); border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; transform: translate(-50%, -50%); transition: all 0.3s; }
+        .letra { position: absolute; width: 36px; height: 36px; background: var(--azul-pasapalabra); border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem; transform: translate(-50%, -50%); transition: all 0.3s; }
         .acertada { background: var(--verde-acierto); box-shadow: 0 0 10px var(--verde-acierto); }
         .fallada { background: var(--rojo-fallo); }
         .activa { transform: translate(-50%, -50%) scale(1.3); border-color: var(--naranja-espera); box-shadow: 0 0 15px var(--naranja-espera); z-index: 10; }
 
         #central-panel { position: absolute; text-align: center; width: 340px; z-index: 5; transition: 0.3s; padding: 20px; border-radius: 20px; background: rgba(0,0,0,0.3); }
-        .modo-escucha { background: rgba(155, 89, 182, 0.3) !important; border: 2px solid var(--morado-escucha); }
+        .modo-escucha { background: rgba(155, 89, 182, 0.4) !important; border: 2px solid var(--morado-escucha); }
         
-        #timer { font-size: 3.5rem; font-weight: bold; margin-bottom: 5px; }
-        #pregunta-box { min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #status-voz { font-size: 1.2rem; font-weight: bold; color: var(--morado-escucha); text-transform: uppercase; height: 1.5em; margin-top: 10px; }
+        #timer { font-size: 3rem; font-weight: bold; margin-bottom: 5px; }
+        #pregunta-box { min-height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #status-voz { font-size: 1rem; font-weight: bold; color: var(--morado-escucha); text-transform: uppercase; height: 1.5em; margin-top: 5px; }
         
-        input[type="text"] { padding: 12px; font-size: 1.1rem; border-radius: 8px; border: none; text-align: center; width: 80%; margin: 15px auto 0; display: block; }
+        input[type="text"] { padding: 12px; font-size: 1.1rem; border-radius: 8px; border: none; text-align: center; width: 85%; margin: 10px auto 0; display: block; }
         .buttons { display: flex; gap: 5px; justify-content: center; margin-top: 10px; }
-        button { padding: 10px 15px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; text-transform: uppercase; }
+        button { padding: 10px 12px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; text-transform: uppercase; font-size: 0.8rem; }
         
         #btn-start { background: white; color: #1a1a2e; font-size: 1.5rem; padding: 15px 40px; margin-top: 20px; }
         .blink { animation: blinker 1s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
         .hidden { display: none !important; }
-
-        @keyframes victoria {
-            0% { box-shadow: 0 0 20px gold; }
-            50% { box-shadow: 0 0 50px white; }
-            100% { box-shadow: 0 0 20px gold; }
-        }
         .celebracion { animation: victoria 0.5s infinite; }
+        @keyframes victoria { 0%, 100% { box-shadow: 0 0 20px gold; } 50% { box-shadow: 0 0 50px white; } }
     </style>
 </head>
 <body>
 
-    <h1 id="titulo">PASAPALABRA FÚTBOL</h1>
+    <h1>PASAPALABRA FÚTBOL PRO</h1>
 
     <div id="game-container">
         <ul class="rosco" id="rosco-letras"></ul>
         <div id="central-panel">
             <div id="timer">120</div>
             <div id="pregunta-box">
-                <span id="texto-pregunta">¿Preparado para la gloria?</span>
+                <span id="texto-pregunta">150 jugadores listos en el vestuario...</span>
                 <div id="status-voz"></div>
             </div>
             <div id="input-area" class="hidden">
-                <input type="text" id="user-answer" placeholder="..." autocomplete="off">
+                <input type="text" id="user-answer" placeholder="Responde..." autocomplete="off">
                 <div class="buttons">
-                    <button id="btn-micro" style="background:var(--morado-escucha); color:white;">🎤</button>
-                    <button id="btn-enviar" style="background:var(--verde-acierto); color:white;">OK</button>
+                    <button id="btn-micro" style="background:var(--morado-escucha); color:white;">🎤 MICRO</button>
+                    <button id="btn-enviar" style="background:var(--verde-acierto); color:white;">ENVIAR</button>
                     <button id="btn-pasapalabra" style="background:var(--naranja-espera);">PASAPALABRA</button>
                 </div>
             </div>
@@ -82,111 +77,283 @@
     </div>
 
     <script>
-        // --- AUDIO ENGINE (STADIUM & APPLAUSE) ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-        function crearRuidoEstadio() {
-            const bufferSize = 2 * audioCtx.sampleRate,
-                buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate),
-                output = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) { output[i] = Math.random() * 2 - 1; }
-
-            const whiteNoise = audioCtx.createBufferSource();
-            whiteNoise.buffer = buffer;
-            whiteNoise.loop = true;
-
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.value = 1000;
-
-            const gainNode = audioCtx.createGain();
-            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 2);
-
-            whiteNoise.connect(filter);
-            filter.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            whiteNoise.start();
-            return gainNode;
+        
+        function sonarExito() {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 3);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 3);
         }
 
-        function sonarAplausos() {
-            const playClap = () => {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(150 + Math.random() * 100, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-            };
-            let i = 0;
-            const interval = setInterval(() => {
-                playClap(); if (i++ > 40) clearInterval(interval);
-            }, 150);
-        }
-
-        // --- GAME LOGIC ---
         const FONETICA_LETRAS = {'I': 'con la i latina', 'V': 'con la uve', 'X': 'contiene la equis', 'Y': 'con la i griega'};
-        const banco = {
-            'A': [{r:['Alisson', 'Alison'], p:'Portero brasileño del Liverpool.'}],
-            'B': [{r:['Benzema'], p:'Ex delantero del Madrid y Balón de Oro.'}],
-            'C': [{r:['Courtois'], p:'Portero belga del Real Madrid.'}],
-            'D': [{r:['Drogba'], p:'Leyenda de Costa de Marfil.'}],
-            'E': [{r:['Etoo'], p:'Delantero camerunés del Barça e Inter.'}],
-            'F': [{r:['Foden'], p:'Estrella inglesa del Manchester City.'}],
-            'G': [{r:['Gavi', 'Gabi'], p:'Joven centrocampista del Barça.'}],
-            'H': [{r:['Haaland'], p:'El androide noruego del gol.'}],
-            'I': [{r:['Iniesta'], p:'El autor del gol en Johannesburgo.'}],
-            'J': [{r:['Jorginho'], p:'Centrocampista italiano campeón de Europa.'}],
-            'K': [{r:['Kane'], p:'Capitán y máximo goleador de Inglaterra.'}],
-            'L': [{r:['Lewandowski'], p:'Delantero polaco del Barcelona.'}],
-            'M': [{r:['Messi'], p:'El astro argentino campeón del mundo.'}],
-            'N': [{r:['Neymar', 'Neimar'], p:'Estrella brasileña que pasó por el PSG.'}],
-            'O': [{r:['Oblak'], p:'Portero esloveno del Atlético.'}],
-            'P': [{r:['Puyol'], p:'Eterno capitán del F.C. Barcelona.'}],
-            'Q': [{r:['Quaresma', 'Cuaresma'], p:'Portugués famoso por su trivela.'}],
-            'R': [{r:['Ronaldo'], p:'Cristiano o el Fenómeno.'}],
-            'S': [{r:['Suarez'], p:'El pistolero uruguayo.'}],
-            'T': [{r:['Ter Stegen'], p:'Portero alemán del Barcelona.'}],
-            'U': [{r:['Unai Simon'], p:'Portero titular de España.'}],
-            'V': [{r:['Vinicius'], p:'Extremo brasileño del Real Madrid.'}],
-            'X': [{r:['Xavi'], p:'Contiene la equis: Director del mejor Barça.'}],
-            'Y': [{r:['Yashin', 'Yasin'], p:'La araña negra soviética.'}],
-            'Z': [{r:['Zidane'], p:'Mago francés de la volea.'}]
+        
+        const bancoCompleto = {
+            'A': [
+                {r:['Alisson', 'Alison'], p:'Portero brasileño del Liverpool.'},
+                {r:['Aguero'], p:'El Kun, máximo goleador extranjero de la Premier.'},
+                {r:['Araujo'], p:'Defensa uruguayo central del Barcelona.'},
+                {r:['Anelka'], p:'Delantero francés que jugó en el Madrid y Arsenal.'},
+                {r:['Asensio'], p:'Balear con gran zurda que jugó en el Madrid y PSG.'},
+                {r:['Aubameyang'], p:'Delantero gabonés ex del Dortmund y Barça.'}
+            ],
+            'B': [
+                {r:['Benzema'], p:'Ganador del Balón de Oro 2022 y leyenda del Madrid.'},
+                {r:['Busquets'], p:'El ancla del centro del campo del mejor Barça.'},
+                {r:['Bellingham'], p:'Estrella inglesa que brilla en el Real Madrid.'},
+                {r:['Buffon'], p:'Legendario portero italiano campeón del mundo.'},
+                {r:['Bale'], p:'El expreso de Cardiff, autor de chilenas míticas.'},
+                {r:['Batistuta'], p:'Mítico nueve argentino de la Fiore y Roma.'}
+            ],
+            'C': [
+                {r:['Courtois'], p:'Portero belga del Real Madrid.'},
+                {r:['Casillas'], p:'El santo, portero campeón de todo con España.'},
+                {r:['Cristiano'], p:'Ronaldo, el máximo goleador de la Champions.'},
+                {r:['Casemiro'], p:'Centrocampista brasileño ex del Madrid y United.'},
+                {r:['Cavani'], p:'El matador, delantero uruguayo.'},
+                {r:['Cruyff'], p:'Johan, el holandés volador.'}
+            ],
+            'D': [
+                {r:['Drogba'], p:'Leyenda marfileña del Chelsea.'},
+                {r:['De Bruyne'], p:'Director de orquesta belga del City.'},
+                {r:['Di Maria'], p:'El fideo, marcó en la final de Qatar.'},
+                {r:['Dybala'], p:'La joya argentina de la Roma.'},
+                {r:['Donnarumma'], p:'Portero italiano del PSG.'},
+                {r:['Del Piero'], p:'Pinturicchio, leyenda de la Juventus.'}
+            ],
+            'E': [
+                {r:['Etoo'], p:'León indomable que ganó el triplete con Barça e Inter.'},
+                {r:['Enzo'], p:'Fernández, centrocampista argentino del Chelsea.'},
+                {r:['Ederson'], p:'Portero brasileño con gran juego de pies del City.'},
+                {r:['Eriksen'], p:'Mago danés que juega en el Manchester United.'},
+                {r:['Eusebio'], p:'La pantera negra, leyenda de Portugal.'},
+                {r:['Emre Can'], p:'Centrocampista alemán del Dortmund.'}
+            ],
+            'F': [
+                {r:['Foden'], p:'El Stockport Iniesta del Manchester City.'},
+                {r:['Figo'], p:'Portugués que cambió el Barça por el Madrid.'},
+                {r:['Forlan'], p:'Cachavacha, bota de oro uruguayo.'},
+                {r:['Falcao'], p:'El tigre colombiano que reinó en el Atleti.'},
+                {r:['Ferran'], p:'Torres, el tiburón del Barcelona.'},
+                {r:['Fekir'], p:'Mago francés campeón del mundo del Betis.'}
+            ],
+            'G': [
+                {r:['Gavi', 'Gabi'], p:'Joven centrocampista con mucha garra del Barça.'},
+                {r:['Griezmann'], p:'El principito francés del Atlético de Madrid.'},
+                {r:['Guardiola'], p:'Pep, leyenda como jugador y técnico culé.'},
+                {r:['Gundogan'], p:'Centrocampista alemán ex del City y Barça.'},
+                {r:['Garrincha'], p:'El ángel de las piernas torcidas de Brasil.'},
+                {r:['Gattuso'], p:'El perro de presa italiano del Milan.'}
+            ],
+            'H': [
+                {r:['Haaland'], p:'El androide noruego que destroza récords.'},
+                {r:['Hazard'], p:'Eden, estrella belga que brilló en el Chelsea.'},
+                {r:['Henry'], p:'Thierry, máximo goleador histórico del Arsenal.'},
+                {r:['Hugo Sanchez'], p:'Goleador mexicano de las chilenas en el Madrid.'},
+                {r:['Hakimi'], p:'Lateral marroquí veloz del PSG.'},
+                {r:['Hummels'], p:'Elegante central alemán del Dortmund.'}
+            ],
+            'I': [
+                {r:['Iniesta'], p:'Andrés, el hombre que nos hizo campeones.'},
+                {r:['Ibrahimovic'], p:'Zlatan, el sueco de los goles imposibles.'},
+                {r:['Isco'], p:'Magia malagueña ex del Madrid y Betis.'},
+                {r:['Immobile'], p:'Ciro, bota de oro italiano de la Lazio.'},
+                {r:['Icardi'], p:'Delantero argentino que brilla en Turquía.'},
+                {r:['Inzaghi'], p:'Pippo, el delantero que vivía en el fuera de juego.'}
+            ],
+            'J': [
+                {r:['Jorginho'], p:'Centrocampista italiano nacido en Brasil.'},
+                {r:['Joao Felix'], p:'Talento portugués ex del Atleti y Barça.'},
+                {r:['James'], p:'Rodríguez, zurda colombiana de oro.'},
+                {r:['Jordi Alba'], p:'Lateral izquierdo socio eterno de Messi.'},
+                {r:['Jairzinho'], p:'Goleador brasileño en todos los partidos de un Mundial.'},
+                {r:['Julio Cesar'], p:'Portero brasileño campeón de Champions con el Inter.'}
+            ],
+            'K': [
+                {r:['Kane'], p:'Harry, el huracán de los goles ingleses.'},
+                {r:['Kroos'], p:'Toni, el director de orquesta alemán.'},
+                {r:['Kante'], p:'Ngolo, el mediocentro que estaba en todas partes.'},
+                {r:['Kaka'], p:'Último balón de oro brasileño antes de Messi.'},
+                {r:['Kimmich'], p:'El cerebro polivalente del Bayern.'},
+                {r:['Kluivert'], p:'Delantero holandés que brilló en el Barça.'}
+            ],
+            'L': [
+                {r:['Lewandowski'], p:'Robert, el goleador polaco de las áreas.'},
+                {r:['Lautaro'], p:'El toro argentino capitán del Inter.'},
+                {r:['Lampard'], p:'Frank, leyenda goleadora del Chelsea.'},
+                {r:['Luis Suarez'], p:'El pistolero uruguayo que mordía en el campo.'},
+                {r:['Lloris'], p:'Portero francés campeón del mundo en Rusia.'},
+                {r:['Lamine'], p:'Yamal, la joya adolescente del Barcelona.'}
+            ],
+            'M': [
+                {r:['Messi'], p:'Lionel, el mejor jugador de la historia argentina.'},
+                {r:['Mbappe'], p:'Kylian, la estrella de Francia.'},
+                {r:['Modric'], p:'Luka, el genio croata del Real Madrid.'},
+                {r:['Maradona'], p:'Diego Armando, el pibe de oro.'},
+                {r:['Muller'], p:'Thomas, el descifrador de espacios alemán.'},
+                {r:['Maldini'], p:'Paolo, eterno capitán del Milan.'}
+            ],
+            'N': [
+                {r:['Neymar', 'Neimar'], p:'El diez de Brasil famoso por su regate.'},
+                {r:['Neuer'], p:'Manuel, el portero líbero alemán.'},
+                {r:['Navas'], p:'Keylor, el portero tico de las tres Champions.'},
+                {r:['Nkunku'], p:'Talento francés ex del Leipzig y Chelsea.'},
+                {r:['Nesta'], p:'Elegante central italiano de la época dorada.'},
+                {r:['Nico Williams'], p:'Extremo veloz del Athletic y España.'}
+            ],
+            'O': [
+                {r:['Oblak'], p:'Jan, el muro esloveno del Atleti.'},
+                {r:['Odegaard'], p:'El capitán noruego que guía al Arsenal.'},
+                {r:['Ozil'], p:'Mesut, el mago de las asistencias aleman.'},
+                {r:['Oshimen'], p:'Víctor, el nigeriano goleador del Nápoles.'},
+                {r:['Owen'], p:'Michael, el niño de oro inglés.'},
+                {r:['Onana'], p:'Portero camerunés del United.'}
+            ],
+            'P': [
+                {r:['Puyol'], p:'Carles, el gran capitán de la zaga culé.'},
+                {r:['Pele'], p:'O Rei, único en ganar tres mundiales.'},
+                {r:['Pirlo'], p:'Andrea, el arquitecto italiano.'},
+                {r:['Pedri'], p:'El canario que juega como los ángeles en el Barça.'},
+                {r:['Pogba'], p:'Paul, centrocampista francés de gran zancada.'},
+                {r:['Pique'], p:'Gerard, central y presidente de la Kings League.'}
+            ],
+            'Q': [
+                {r:['Quaresma', 'Cuaresma'], p:'El rey portugués de la trivela.'},
+                {r:['Quini'], p:'El brujo, legendario goleador español.'},
+                {r:['Quagliarella'], p:'Eterno goleador italiano de la Sampdoria.'},
+                {r:['Quintero'], p:'Juanfer, héroe de River en la final de Madrid.'},
+                {r:['Quintana'], p:'Apellido del portero uruguayo apodado el mono.'}
+            ],
+            'R': [
+                {r:['Ronaldo'], p:'El fenómeno brasileño que jugó en Madrid e Inter.'},
+                {r:['Raul'], p:'González Blanco, el eterno siete del Real Madrid.'},
+                {r:['Ronaldinho'], p:'El brasileño que devolvió la sonrisa al fútbol.'},
+                {r:['Rodri'], p:'Centrocampista español clave en el City.'},
+                {r:['Rivaldo'], p:'Zurda de oro brasileña campeona del mundo.'},
+                {r:['Roberto Carlos'], p:'Lateral brasileño con un disparo atómico.'}
+            ],
+            'S': [
+                {r:['Suarez'], p:'Luis Alberto, el pistolero uruguayo.'},
+                {r:['Salah'], p:'Mohamed, el faraón del Liverpool.'},
+                {r:['Saka'], p:'Bukayo, el joven extremo estrella del Arsenal.'},
+                {r:['Stoichkov'], p:'Hristo, búlgaro con carácter y bota de oro.'},
+                {r:['Son'], p:'Heung-min, el surcoreano del Tottenham.'},
+                {r:['Schmeichel'], p:'Peter o Kasper, porteros daneses de élite.'}
+            ],
+            'T': [
+                {r:['Ter Stegen'], p:'Marc André, portero alemán del Barcelona.'},
+                {r:['Totti'], p:'Francesco, il capitano eterno de la Roma.'},
+                {r:['Theo'], p:'Hernández, lateral francés veloz del Milan.'},
+                {r:['Thiago'], p:'Alcántara, técnica pura en el centro del campo.'},
+                {r:['Trezeguet'], p:'David, goleador francés campeón del mundo.'},
+                {r:['Torres'], p:'Fernando, el niño que marcó el gol de la Eurocopa.'}
+            ],
+            'U': [
+                {r:['Unai Simon'], p:'Portero titular de España y del Athletic.'},
+                {r:['Umtiti'], p:'Defensa francés campeón en 2018.'},
+                {r:['Upamecano'], p:'Potente central francés del Bayern.'},
+                {r:['Uche'], p:'Delantero nigeriano veloz que jugó en España.'},
+                {r:['Uribe'], p:'Centrocampista colombiano ex del Oporto.'}
+            ],
+            'V': [
+                {r:['Vinicius'], p:'Vini, extremo brasileño estrella del Madrid.'},
+                {r:['Van Dijk'], p:'Virgil, el muro neerlandés del Liverpool.'},
+                {r:['Valverde'], p:'Fede, el halcón uruguayo del Real Madrid.'},
+                {r:['Van Basten'], p:'Marco, legendario goleador del Milan y Holanda.'},
+                {r:['Vieri'], p:'Christian, el toro italiano del gol.'},
+                {r:['Vitor Roque'], p:'Tigrinho, joven delantero brasileño.'}
+            ],
+            'X': [
+                {r:['Xavi'], p:'Contiene la equis: Maestro del tiki-taka culé.'},
+                {r:['Xabi Alonso'], p:'Contiene la equis: Maestro del pase largo español.'},
+                {r:['Xhaka'], p:'Granit, centrocampista suizo de gran disparo.'},
+                {r:['Alexis'], p:'Contiene la equis: El niño maravilla chileno.'},
+                {r:['Mexes'], p:'Contiene la equis: Defensa francés elegante.'},
+                {r:['Draxler'], p:'Contiene la equis: Atacante alemán talentoso.'}
+            ],
+            'Y': [
+                {r:['Yashin', 'Yasin', 'Yassin'], p:'La araña negra soviética de la portería.'},
+                {r:['Yaya Toure'], p:'Potente centrocampista marfileño del City y Barça.'},
+                {r:['Yamal'], p:'Lamine, la perla adolescente del fútbol mundial.'},
+                {r:['Yepez'], p:'Mítico capitán de la defensa colombiana.'},
+                {r:['Yebda'], p:'Centrocampista argelino que jugó en España.'}
+            ],
+            'Z': [
+                {r:['Zidane'], p:'Zizou, el genio francés de la marsellesa.'},
+                {r:['Zanetti'], p:'Javier, el pupi eterno del Inter.'},
+                {r:['Zico'], p:'El Pelé blanco de Brasil.'},
+                {r:['Zamorano'], p:'Iván, el helicóptero chileno del gol.'},
+                {r:['Zlatan'], p:'Ibrahimovic, leyenda sueca de taekwondo y fútbol.'},
+                {r:['Zubizarreta'], p:'Portero español histórico del Barça y la selección.'}
+            ]
         };
 
-        let preguntas = [], currentIndex = 0, tiempo = 120, timer, activo = false, hablando = false, escuchaActivada = false;
+        let preguntasActuales = [], currentIndex = 0, tiempo = 120, timer, activo = false, hablando = false, escuchaActivada = false;
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = 'es-ES';
 
         function súperNormalizar(str) {
-            return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/sh/g, 's').replace(/ll/g, 'y').replace(/v/g, 'b').replace(/([^a-z0-9])/g, "").replace(/(.)\1+/g, '$1');
+            return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/sh/g, 's').replace(/ss/g, 's').replace(/ll/g, 'y').replace(/v/g, 'b').replace(/([^a-z0-9])/g, "").replace(/(.)\1+/g, '$1');
         }
 
-        recognition.onstart = () => { if (hablando) { recognition.stop(); return; } escuchaActivada = true; document.getElementById('central-panel').classList.add('modo-escucha'); document.getElementById('status-voz').innerHTML = '<span class="blink">● HABLA AHORA ●</span>'; };
-        recognition.onresult = (e) => { if (!escuchaActivada) return; const res = e.results[0][0].transcript; document.getElementById('user-answer').value = res; document.getElementById('status-voz').innerText = `Oído: ${res}`; escuchaActivada = false; setTimeout(verificar, 400); };
-        recognition.onend = () => { document.getElementById('central-panel').classList.remove('modo-escucha'); if (activo && !hablando && !escuchaActivada) setTimeout(() => { if(activo && !hablando) try { recognition.start(); } catch(e){} }, 800); };
+        recognition.onstart = () => { 
+            if (hablando) { recognition.stop(); return; }
+            escuchaActivada = true;
+            document.getElementById('central-panel').classList.add('modo-escucha');
+            document.getElementById('status-voz').innerHTML = '<span class="blink">● HABLA AHORA ●</span>';
+        };
+
+        recognition.onresult = (e) => {
+            if (!escuchaActivada) return;
+            const res = e.results[0][0].transcript;
+            document.getElementById('user-answer').value = res;
+            escuchaActivada = false;
+            setTimeout(verificar, 400);
+        };
+
+        recognition.onend = () => {
+            document.getElementById('central-panel').classList.remove('modo-escucha');
+            if (activo && !hablando && !escuchaActivada) {
+                setTimeout(() => { if(activo && !hablando) try { recognition.start(); } catch(e){} }, 800);
+            }
+        };
 
         function hablar(texto, letra) {
             hablando = true; escuchaActivada = false; recognition.stop();
-            const voz = new SpeechSynthesisUtterance(`${FONETICA_LETRAS[letra] || 'con la ' + letra}: ${texto}`);
-            voz.lang = 'es-ES';
-            voz.onend = () => { setTimeout(() => { hablando = false; document.getElementById('texto-pregunta').innerText = `${letra}: ${texto}`; if(activo) try { recognition.start(); } catch(e){} }, 800); };
-            window.speechSynthesis.speak(voz);
+            const frase = `${FONETICA_LETRAS[letra] || 'con la ' + letra}: ${texto}`;
+            const utterance = new SpeechSynthesisUtterance(frase);
+            utterance.lang = 'es-ES';
+            utterance.onend = () => {
+                setTimeout(() => {
+                    hablando = false;
+                    document.getElementById('texto-pregunta').innerText = `${letra}: ${texto}`;
+                    if(activo) try { recognition.start(); } catch(e){}
+                }, 800);
+            };
+            window.speechSynthesis.speak(utterance);
         }
 
         function verificar() {
             hablando = true;
             const resUser = súperNormalizar(document.getElementById('user-answer').value);
-            const actual = preguntas[currentIndex];
+            const actual = preguntasActuales[currentIndex];
             const letraNorm = actual.letra.toLowerCase();
-            if (resUser.includes("pasapalabra")) { document.getElementById('user-answer').value = ""; pasapalabra(); return; }
+
+            if (resUser.includes("pasapalabra")) {
+                document.getElementById('user-answer').value = ""; pasapalabra(); return;
+            }
 
             const esValido = actual.r.some(n => {
                 const nNorm = súperNormalizar(n);
-                const okIni = (letraNorm === 'q') ? (resUser.startsWith('q') || resUser.startsWith('c')) : (letraNorm === 'y') ? (resUser.startsWith('y') || resUser.startsWith('i')) : (letraNorm === 'x') ? resUser.includes('x') : (resUser.startsWith(letraNorm) || (letraNorm === 'b' && resUser.startsWith('v')) || (letraNorm === 'v' && resUser.startsWith('b')));
+                let okIni = resUser.startsWith(letraNorm);
+                if (letraNorm === 'q') okIni = (resUser.startsWith('q') || resUser.startsWith('c'));
+                if (letraNorm === 'y') okIni = (resUser.startsWith('y') || resUser.startsWith('i') || resUser.startsWith('ll'));
+                if (letraNorm === 'x') okIni = (resUser.includes('x') || resUser.includes('s'));
+                if (letraNorm === 'b' || letraNorm === 'v') okIni = (resUser.startsWith('b') || resUser.startsWith('v'));
                 return okIni && (resUser.includes(nNorm) || nNorm.includes(resUser));
             });
 
@@ -197,7 +364,7 @@
             } else {
                 actual.estado = 'fallo';
                 document.getElementById(`letra-${currentIndex}`).classList.add('fallada');
-                const fb = new SpeechSynthesisUtterance(`Error, era ${actual.r[0]}`);
+                const fb = new SpeechSynthesisUtterance(`Error, la respuesta era ${actual.r[0]}`);
                 fb.lang = 'es-ES'; fb.onend = () => { document.getElementById('user-answer').value = ""; hablando = false; siguiente(); };
                 window.speechSynthesis.speak(fb);
             }
@@ -205,32 +372,30 @@
 
         function siguiente() {
             let v = 0;
-            while (preguntas[currentIndex].estado && v < 25) { currentIndex = (currentIndex + 1) % 25; v++; }
+            while (preguntasActuales[currentIndex].estado && v < 25) { currentIndex = (currentIndex + 1) % 25; v++; }
             if (v === 25) { finalizar(); return; }
             document.querySelectorAll('.letra').forEach(l => l.classList.remove('activa'));
             document.getElementById(`letra-${currentIndex}`).classList.add('activa');
-            hablar(preguntas[currentIndex].p, preguntas[currentIndex].letra);
+            hablar(preguntasActuales[currentIndex].p, preguntasActuales[currentIndex].letra);
         }
 
         function pasapalabra() {
-            hablando = true; const v = new SpeechSynthesisUtterance("Pasamos palabra");
+            hablando = true;
+            const v = new SpeechSynthesisUtterance("Pasamos palabra");
             v.onend = () => { currentIndex = (currentIndex + 1) % 25; hablando = false; siguiente(); };
             window.speechSynthesis.speak(v);
         }
 
         function finalizar() {
             activo = false; clearInterval(timer); recognition.stop();
-            const aciertos = preguntas.filter(p => p.estado === 'acierto').length;
-            
-            if (aciertos === 25) {
-                document.getElementById('texto-pregunta').innerText = "¡INCREÍBLE! ¡HAS COMPLETADO EL ROSCO!";
+            const ok = preguntasActuales.filter(p => p.estado === 'acierto').length;
+            if (ok === 25) {
+                document.getElementById('texto-pregunta').innerText = "¡HISTÓRICO! ¡ROSCO COMPLETADO!";
                 document.getElementById('central-panel').classList.add('celebracion');
-                crearRuidoEstadio();
-                sonarAplausos();
+                sonarExito();
             } else {
-                document.getElementById('texto-pregunta').innerText = `FIN. Aciertos: ${aciertos}`;
+                document.getElementById('texto-pregunta').innerText = `PARTIDO FINALIZADO. Aciertos: ${ok}`;
             }
-            
             document.getElementById('input-area').classList.add('hidden');
             document.getElementById('btn-start').classList.remove('hidden');
         }
@@ -238,15 +403,23 @@
         document.getElementById('btn-start').addEventListener('click', () => {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             document.getElementById('central-panel').classList.remove('celebracion');
-            preguntas = Object.keys(banco).sort().map(l => ({letra: l, ...banco[l][0], estado: null}));
+            
+            // Generar partida aleatoria de 25 preguntas
+            preguntasActuales = Object.keys(bancoCompleto).sort().map(letra => {
+                const opciones = bancoCompleto[letra];
+                const eleccion = opciones[Math.floor(Math.random() * opciones.length)];
+                return { letra: letra, ...eleccion, estado: null };
+            });
+
             const rosco = document.getElementById('rosco-letras'); rosco.innerHTML = "";
-            preguntas.forEach((p, i) => {
+            preguntasActuales.forEach((p, i) => {
                 const li = document.createElement('li'); li.className = 'letra'; li.innerText = p.letra; li.id = `letra-${i}`;
                 const angle = (i * (360 / 25)) - 90;
                 li.style.left = `${250 + 220 * Math.cos(angle * Math.PI / 180)}px`;
                 li.style.top = `${250 + 220 * Math.sin(angle * Math.PI / 180)}px`;
                 rosco.appendChild(li);
             });
+
             document.getElementById('btn-start').classList.add('hidden');
             document.getElementById('input-area').classList.remove('hidden');
             activo = true; tiempo = 120; currentIndex = 0;
