@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pasapalabra Fútbol - Sincronización Total</title>
+    <title>Pasapalabra Fútbol - Validación Inteligente</title>
     <style>
         :root {
             --azul-pasapalabra: #0056b3;
@@ -37,41 +37,16 @@
         .modo-escucha { background: rgba(155, 89, 182, 0.2); border: 2px solid var(--morado-escucha); }
         
         #timer { font-size: 3.5rem; font-weight: bold; margin-bottom: 5px; }
-        
-        #pregunta-box {
-            min-height: 120px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #status-voz {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--morado-escucha);
-            text-transform: uppercase;
-            height: 1.5em;
-            margin-top: 10px;
-            letter-spacing: 1px;
-        }
-
+        #pregunta-box { min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #status-voz { font-size: 1.2rem; font-weight: bold; color: var(--morado-escucha); text-transform: uppercase; height: 1.5em; margin-top: 10px; }
         #input-area { margin-top: 15px; display: flex; gap: 10px; flex-direction: column; }
-        input[type="text"] { padding: 12px; font-size: 1.1rem; border-radius: 8px; border: none; text-align: center; background: white; color: black; }
-        
+        input[type="text"] { padding: 12px; font-size: 1.1rem; border-radius: 8px; border: none; text-align: center; width: 80%; margin: 0 auto; }
         .buttons { display: flex; gap: 5px; justify-content: center; margin-top: 10px; }
-        button { padding: 10px 15px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; text-transform: uppercase; }
-        
-        #btn-micro { background: var(--morado-escucha); color: white; }
-        #btn-enviar { background: var(--verde-acierto); color: white; }
-        #btn-pasapalabra { background: var(--naranja-espera); color: black; }
+        button { padding: 10px 15px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; }
         #btn-start { background: white; color: #1a1a2e; font-size: 1.5rem; padding: 15px 40px; }
-
-        .hidden { display: none !important; }
-        
-        /* Animación para el mensaje de habla ahora */
         .blink { animation: blinker 1s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -89,9 +64,9 @@
             <div id="input-area" class="hidden">
                 <input type="text" id="user-answer" placeholder="..." autocomplete="off">
                 <div class="buttons">
-                    <button id="btn-micro">🎤 REINTENTAR</button>
-                    <button id="btn-enviar">OK</button>
-                    <button id="btn-pasapalabra">PASAPALABRA</button>
+                    <button id="btn-micro" style="background:var(--morado-escucha); color:white;">🎤</button>
+                    <button id="btn-enviar" style="background:var(--verde-acierto); color:white;">OK</button>
+                    <button id="btn-pasapalabra" style="background:var(--naranja-espera);">PASAPALABRA</button>
                 </div>
             </div>
             <button id="btn-start">EMPEZAR PARTIDO</button>
@@ -100,117 +75,117 @@
 
     <script>
         const FONETICA = {'I': 'con la i latina', 'V': 'con la uve', 'X': 'contiene la equis', 'Y': 'con la i griega'};
+        
+        // Banco con ALIAS para evitar fallos por escritura del micro
         const banco = {
-            'A': [{r:'Alisson', p:'Portero brasileño del Liverpool.'}],
-            'B': [{r:'Benzema', p:'Ganador del Balón de Oro 2022 y ex del Real Madrid.'}],
-            'C': [{r:'Courtois', p:'Portero belga clave en la decimocuarta del Madrid.'}],
-            'D': [{r:'Drogba', p:'Leyenda goleadora de Costa de Marfil.'}],
-            'E': [{r:'Etoo', p:'Delantero camerunés que ganó tripletes con Barça e Inter.'}],
-            'F': [{r:'Foden', p:'Joven estrella inglesa del Manchester City.'}],
-            'G': [{r:'Gavi', p:'Centrocampista del Barça, ganador del Golden Boy.'}],
-            'H': [{r:'Haaland', p:'El delantero noruego apodado el androide.'}],
-            'I': [{r:'Iniesta', p:'Autor del gol más importante de España.'}],
-            'J': [{r:'Jorginho', p:'Centrocampista italiano clave en la Eurocopa de 2021.'}],
-            'K': [{r:'Kane', p:'Máximo goleador histórico de la selección inglesa.'}],
-            'L': [{r:'Lewandowski', p:'Goleador polaco del Barcelona.'}],
-            'M': [{r:'Messi', p:'Capitán argentino campeón del mundo en Qatar.'}],
-            'N': [{r:'Neymar', p:'Extremo brasileño famoso por su regate y jogo bonito.'}],
-            'O': [{r:'Oblak', p:'Muro esloveno de la portería del Atlético.'}],
-            'P': [{r:'Puyol', p:'El eterno capitán tiburón del Barça.'}],
-            'Q': [{r:'Quaresma', p:'Portugués famoso por sus centros de trivela.'}],
-            'R': [{r:'Ronaldo', p:'El fenómeno brasileño o Cristiano el bicho.'}],
-            'S': [{r:'Suarez', p:'El pistolero uruguayo que brilló en el Barça.'}],
-            'T': [{r:'Ter Stegen', p:'Portero alemán con gran juego de pies del Barça.'}],
-            'U': [{r:'Unai Simon', p:'Portero titular de España y del Athletic.'}],
-            'V': [{r:'Vinicius', p:'Extremo brasileño estrella del Real Madrid.'}],
-            'X': [{r:'Xavi', p:'Contiene la equis: Maestro del centro del campo culé.'}],
-            'Y': [{r:'Yashin', p:'La araña negra y único portero Balón de Oro.'}],
-            'Z': [{r:'Zidane', p:'Zizou, autor de la volea en Glasgow.'}]
+            'A': [{r:['Alisson', 'Alison'], p:'Portero brasileño del Liverpool.'}],
+            'B': [{r:['Benzema'], p:'Ex delantero del Madrid y Balón de Oro.'}],
+            'C': [{r:['Courtois'], p:'Portero belga del Real Madrid.'}],
+            'D': [{r:['Drogba'], p:'Leyenda de Costa de Marfil.'}],
+            'E': [{r:['Etoo'], p:'Delantero camerunés del Barça e Inter.'}],
+            'F': [{r:['Foden'], p:'Estrella inglesa del Manchester City.'}],
+            'G': [{r:['Gavi'], p:'Joven centrocampista del Barça.'}],
+            'H': [{r:['Haaland'], p:'El androide noruego del gol.'}],
+            'I': [{r:['Iniesta'], p:'El autor del gol en Johannesburgo.'}],
+            'J': [{r:['Jorginho'], p:'Centrocampista italiano campeón de Europa.'}],
+            'K': [{r:['Kane'], p:'Capitán y máximo goleador de Inglaterra.'}],
+            'L': [{r:['Lewandowski'], p:'Delantero polaco del Barcelona.'}],
+            'M': [{r:['Messi'], p:'El astro argentino campeón del mundo.'}],
+            'N': [{r:['Neymar'], p:'Estrella brasileña que pasó por el PSG.'}],
+            'O': [{r:['Oblak'], p:'Portero esloveno del Atlético.'}],
+            'P': [{r:['Puyol'], p:'Eterno capitán del F.C. Barcelona.'}],
+            'Q': [{r:['Quaresma', 'Cuaresma'], p:'Portugués famoso por su trivela.'}],
+            'R': [{r:['Ronaldo'], p:'Cristiano o el Fenómeno.'}],
+            'S': [{r:['Suarez'], p:'El pistolero uruguayo.'}],
+            'T': [{r:['Ter Stegen'], p:'Portero alemán del Barcelona.'}],
+            'U': [{r:['Unai Simon'], p:'Portero titular de España.'}],
+            'V': [{r:['Vinicius'], p:'Extremo brasileño del Real Madrid.'}],
+            'X': [{r:['Xavi'], p:'Contiene la equis: Director del mejor Barça.'}],
+            'Y': [{r:['Yashin'], p:'La araña negra soviética.'}],
+            'Z': [{r:['Zidane'], p:'Mago francés de la volea.'}]
         };
 
         let preguntas = [], currentIndex = 0, tiempo = 120, timer, activo = false, hablando = false, escuchaActivada = false;
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = 'es-ES';
-        recognition.interimResults = false;
 
-        const panelUI = document.getElementById('central-panel');
-        const statusUI = document.getElementById('status-voz');
-        const inputUI = document.getElementById('user-answer');
-        const preguntaUI = document.getElementById('texto-pregunta');
-
-        function normalizar(str) {
-            return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+        function súperNormalizar(str) {
+            return str.toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "") // Quitar tildes
+                .replace(/([^a-z0-9])/g, "")     // Quitar todo lo no alfanumérico
+                .replace(/(.)\1+/g, '$1');       // Reducir letras dobles a simples (Alisson -> Alison)
         }
 
         recognition.onstart = () => {
             if (hablando) { recognition.stop(); return; }
             escuchaActivada = true;
-            panelUI.classList.add('modo-escucha');
-            statusUI.innerHTML = '<span class="blink">● HABLA AHORA ●</span>';
+            document.getElementById('central-panel').classList.add('modo-escucha');
+            document.getElementById('status-voz').innerHTML = '<span class="blink">● HABLA AHORA ●</span>';
         };
 
         recognition.onresult = (e) => {
-            if (!escuchaActivada || hablando) return;
+            if (!escuchaActivada) return;
             const res = e.results[0][0].transcript;
-            inputUI.value = res;
-            statusUI.innerText = `Oído: ${res}`;
+            document.getElementById('user-answer').value = res;
+            document.getElementById('status-voz').innerText = `Oído: ${res}`;
             escuchaActivada = false;
             setTimeout(verificar, 400);
         };
 
         recognition.onend = () => {
-            panelUI.classList.remove('modo-escucha');
+            document.getElementById('central-panel').classList.remove('modo-escucha');
             if (activo && !hablando && !escuchaActivada) {
-                // Pequeño delay de reintento si no se captó nada
                 setTimeout(() => { if(activo && !hablando) try { recognition.start(); } catch(e){} }, 800);
             }
         };
 
         function hablar(texto, letra) {
-            hablando = true;
-            escuchaActivada = false;
-            recognition.stop();
-            statusUI.innerText = "SISTEMA HABLANDO...";
-            
-            const locucion = new SpeechSynthesisUtterance(`${FONETICA[letra] || 'con la ' + letra}: ${texto}`);
-            locucion.lang = 'es-ES';
-            locucion.rate = 1.0;
-
-            locucion.onend = () => {
+            hablando = true; escuchaActivada = false; recognition.stop();
+            const voz = new SpeechSynthesisUtterance(`${FONETICA[letra] || 'con la ' + letra}: ${texto}`);
+            voz.lang = 'es-ES';
+            voz.onend = () => {
                 setTimeout(() => {
                     hablando = false;
-                    preguntaUI.innerText = `${letra}: ${texto}`;
+                    document.getElementById('texto-pregunta').innerText = `${letra}: ${texto}`;
                     if(activo) try { recognition.start(); } catch(e){}
-                }, 800); // Espera 0.8s para que no capte el eco
+                }, 800);
             };
-            window.speechSynthesis.speak(locucion);
+            window.speechSynthesis.speak(voz);
         }
 
         function verificar() {
-            hablando = true; // Bloqueo temporal
-            const resUser = normalizar(inputUI.value);
+            hablando = true;
+            const resUser = súperNormalizar(document.getElementById('user-answer').value);
             const actual = preguntas[currentIndex];
-            const letraNorm = normalizar(actual.letra);
-            
+            const letraNorm = actual.letra.toLowerCase();
+
             if (resUser.includes("pasapalabra")) {
-                inputUI.value = ""; pasapalabra(); return;
+                document.getElementById('user-answer').value = ""; pasapalabra(); return;
             }
 
-            // Validación estricta: debe empezar por la letra (salvo X)
-            const cumpleLetra = (letraNorm === 'x') ? resUser.includes('x') : resUser.startsWith(letraNorm);
+            // Validar contra cualquiera de los alias aceptados
+            const esValido = actual.r.some(nombrePosible => {
+                const nombreNorm = súperNormalizar(nombrePosible);
+                
+                // Regla especial para Q: Permitir que el micro o el usuario use C
+                const empiezaBien = (letraNorm === 'q') ? (resUser.startsWith('q') || resUser.startsWith('c')) : 
+                                   (letraNorm === 'x') ? resUser.includes('x') : 
+                                   resUser.startsWith(letraNorm);
 
-            if (cumpleLetra && (resUser.includes(normalizar(actual.r)) || normalizar(actual.r).includes(resUser))) {
+                return empiezaBien && (resUser.includes(nombreNorm) || nombreNorm.includes(resUser));
+            });
+
+            if (esValido) {
                 actual.estado = 'acierto';
                 document.getElementById(`letra-${currentIndex}`).classList.add('acertada');
-                inputUI.value = "";
-                hablando = false;
-                siguiente();
+                document.getElementById('user-answer').value = ""; hablando = false; siguiente();
             } else {
                 actual.estado = 'fallo';
                 document.getElementById(`letra-${currentIndex}`).classList.add('fallada');
-                const feedback = new SpeechSynthesisUtterance(`Error, era ${actual.r}`);
-                feedback.onend = () => { inputUI.value = ""; hablando = false; siguiente(); };
-                window.speechSynthesis.speak(feedback);
+                const fb = new SpeechSynthesisUtterance(`Error, era ${actual.r[0]}`);
+                fb.onend = () => { document.getElementById('user-answer').value = ""; hablando = false; siguiente(); };
+                window.speechSynthesis.speak(fb);
             }
         }
 
@@ -221,7 +196,6 @@
                 vueltas++;
             }
             if (vueltas === 25) { finalizar(); return; }
-            
             document.querySelectorAll('.letra').forEach(l => l.classList.remove('activa'));
             document.getElementById(`letra-${currentIndex}`).classList.add('activa');
             hablar(preguntas[currentIndex].p, preguntas[currentIndex].letra);
@@ -229,30 +203,22 @@
 
         function pasapalabra() {
             hablando = true;
-            statusUI.innerText = "PASANDO PALABRA...";
-            const voz = new SpeechSynthesisUtterance("Pasamos palabra");
-            voz.onend = () => { 
-                currentIndex = (currentIndex + 1) % 25; 
-                hablando = false; siguiente(); 
-            };
-            window.speechSynthesis.speak(voz);
+            const v = new SpeechSynthesisUtterance("Pasamos palabra");
+            v.onend = () => { currentIndex = (currentIndex + 1) % 25; hablando = false; siguiente(); };
+            window.speechSynthesis.speak(v);
         }
 
         function finalizar() {
-            activo = false; 
-            clearInterval(timer);
-            recognition.stop();
+            activo = false; clearInterval(timer); recognition.stop();
             const ok = preguntas.filter(p => p.estado === 'acierto').length;
-            preguntaUI.innerText = `JUEGO TERMINADO. Aciertos: ${ok}`;
-            statusUI.innerText = "";
+            document.getElementById('texto-pregunta').innerText = `FIN. Aciertos: ${ok}`;
             document.getElementById('input-area').classList.add('hidden');
             document.getElementById('btn-start').classList.remove('hidden');
         }
 
         document.getElementById('btn-start').addEventListener('click', () => {
             preguntas = Object.keys(banco).sort().map(l => ({letra: l, ...banco[l][0], estado: null}));
-            const rosco = document.getElementById('rosco-letras');
-            rosco.innerHTML = "";
+            const rosco = document.getElementById('rosco-letras'); rosco.innerHTML = "";
             preguntas.forEach((p, i) => {
                 const li = document.createElement('li'); li.className = 'letra'; li.innerText = p.letra; li.id = `letra-${i}`;
                 const angle = (i * (360 / 25)) - 90;
