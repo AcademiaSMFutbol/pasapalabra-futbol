@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pasapalabra Fútbol - Validación Inteligente</title>
+    <title>Pasapalabra Fútbol - Fonética Española</title>
     <style>
         :root {
             --azul-pasapalabra: #0056b3;
@@ -58,7 +58,7 @@
         <div id="central-panel">
             <div id="timer">120</div>
             <div id="pregunta-box">
-                <span id="texto-pregunta">Pulsa para empezar</span>
+                <span id="texto-pregunta">Cargando voces españolas...</span>
                 <div id="status-voz"></div>
             </div>
             <div id="input-area" class="hidden">
@@ -74,9 +74,8 @@
     </div>
 
     <script>
-        const FONETICA = {'I': 'con la i latina', 'V': 'con la uve', 'X': 'contiene la equis', 'Y': 'con la i griega'};
+        const FONETICA_LETRAS = {'I': 'con la i latina', 'V': 'con la uve', 'X': 'contiene la equis', 'Y': 'con la i griega'};
         
-        // Banco con ALIAS para evitar fallos por escritura del micro
         const banco = {
             'A': [{r:['Alisson', 'Alison'], p:'Portero brasileño del Liverpool.'}],
             'B': [{r:['Benzema'], p:'Ex delantero del Madrid y Balón de Oro.'}],
@@ -84,7 +83,7 @@
             'D': [{r:['Drogba'], p:'Leyenda de Costa de Marfil.'}],
             'E': [{r:['Etoo'], p:'Delantero camerunés del Barça e Inter.'}],
             'F': [{r:['Foden'], p:'Estrella inglesa del Manchester City.'}],
-            'G': [{r:['Gavi'], p:'Joven centrocampista del Barça.'}],
+            'G': [{r:['Gavi', 'Gabi'], p:'Joven centrocampista del Barça.'}],
             'H': [{r:['Haaland'], p:'El androide noruego del gol.'}],
             'I': [{r:['Iniesta'], p:'El autor del gol en Johannesburgo.'}],
             'J': [{r:['Jorginho'], p:'Centrocampista italiano campeón de Europa.'}],
@@ -109,12 +108,22 @@
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = 'es-ES';
 
+        // Selección de voz española
+        let vozEspanola = null;
+        function cargarVoces() {
+            const voces = window.speechSynthesis.getVoices();
+            vozEspanola = voces.find(v => v.lang === 'es-ES' || v.lang === 'es_ES') || voces.find(v => v.lang.startsWith('es'));
+        }
+        window.speechSynthesis.onvoiceschanged = cargarVoces;
+        cargarVoces();
+
         function súperNormalizar(str) {
             return str.toLowerCase()
                 .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "") // Quitar tildes
-                .replace(/([^a-z0-9])/g, "")     // Quitar todo lo no alfanumérico
-                .replace(/(.)\1+/g, '$1');       // Reducir letras dobles a simples (Alisson -> Alison)
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/([^a-z0-9])/g, "")
+                .replace(/v/g, 'b') // Tratar B y V como iguales fonéticamente
+                .replace(/(.)\1+/g, '$1');
         }
 
         recognition.onstart = () => {
@@ -142,16 +151,19 @@
 
         function hablar(texto, letra) {
             hablando = true; escuchaActivada = false; recognition.stop();
-            const voz = new SpeechSynthesisUtterance(`${FONETICA[letra] || 'con la ' + letra}: ${texto}`);
-            voz.lang = 'es-ES';
-            voz.onend = () => {
+            const frase = `${FONETICA_LETRAS[letra] || 'con la ' + letra}: ${texto}`;
+            const utterance = new SpeechSynthesisUtterance(frase);
+            if (vozEspanola) utterance.voice = vozEspanola;
+            utterance.lang = 'es-ES';
+            
+            utterance.onend = () => {
                 setTimeout(() => {
                     hablando = false;
                     document.getElementById('texto-pregunta').innerText = `${letra}: ${texto}`;
                     if(activo) try { recognition.start(); } catch(e){}
                 }, 800);
             };
-            window.speechSynthesis.speak(voz);
+            window.speechSynthesis.speak(utterance);
         }
 
         function verificar() {
@@ -164,14 +176,11 @@
                 document.getElementById('user-answer').value = ""; pasapalabra(); return;
             }
 
-            // Validar contra cualquiera de los alias aceptados
             const esValido = actual.r.some(nombrePosible => {
                 const nombreNorm = súperNormalizar(nombrePosible);
-                
-                // Regla especial para Q: Permitir que el micro o el usuario use C
                 const empiezaBien = (letraNorm === 'q') ? (resUser.startsWith('q') || resUser.startsWith('c')) : 
                                    (letraNorm === 'x') ? resUser.includes('x') : 
-                                   resUser.startsWith(letraNorm);
+                                   (resUser.startsWith(letraNorm) || (letraNorm === 'b' && resUser.startsWith('v')) || (letraNorm === 'v' && resUser.startsWith('b')));
 
                 return empiezaBien && (resUser.includes(nombreNorm) || nombreNorm.includes(resUser));
             });
@@ -183,7 +192,13 @@
             } else {
                 actual.estado = 'fallo';
                 document.getElementById(`letra-${currentIndex}`).classList.add('fallada');
-                const fb = new SpeechSynthesisUtterance(`Error, era ${actual.r[0]}`);
+                // Fonética forzada para el feedback de error (evitar "Gueibi")
+                let respuestaParaLeer = actual.r[0];
+                if (respuestaParaLeer.toLowerCase() === 'gavi' || respuestaParaLeer.toLowerCase() === 'gabi') respuestaParaLeer = "Gabi con b de Barcelona";
+                
+                const fb = new SpeechSynthesisUtterance(`Error, la respuesta era ${respuestaParaLeer}`);
+                if (vozEspanola) fb.voice = vozEspanola;
+                fb.lang = 'es-ES';
                 fb.onend = () => { document.getElementById('user-answer').value = ""; hablando = false; siguiente(); };
                 window.speechSynthesis.speak(fb);
             }
@@ -204,6 +219,8 @@
         function pasapalabra() {
             hablando = true;
             const v = new SpeechSynthesisUtterance("Pasamos palabra");
+            if (vozEspanola) v.voice = vozEspanola;
+            v.lang = 'es-ES';
             v.onend = () => { currentIndex = (currentIndex + 1) % 25; hablando = false; siguiente(); };
             window.speechSynthesis.speak(v);
         }
@@ -211,7 +228,7 @@
         function finalizar() {
             activo = false; clearInterval(timer); recognition.stop();
             const ok = preguntas.filter(p => p.estado === 'acierto').length;
-            document.getElementById('texto-pregunta').innerText = `FIN. Aciertos: ${ok}`;
+            document.getElementById('texto-pregunta').innerText = `FIN DEL JUEGO. Aciertos: ${ok}`;
             document.getElementById('input-area').classList.add('hidden');
             document.getElementById('btn-start').classList.remove('hidden');
         }
