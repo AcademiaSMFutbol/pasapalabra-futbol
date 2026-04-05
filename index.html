@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pasapalabra Fútbol - Competición Estricta</title>
+    <title>Pasapalabra Fútbol - Sincronización Total</title>
     <style>
         :root {
             --azul-pasapalabra: #0056b3;
             --verde-acierto: #28a745;
             --rojo-fallo: #dc3545;
             --naranja-espera: #ffc107;
-            --morado-voz: #9b59b6;
+            --morado-escucha: #9b59b6;
         }
 
         body {
@@ -29,27 +29,54 @@
         #game-container { position: relative; width: 600px; height: 600px; display: flex; align-items: center; justify-content: center; }
         .rosco { position: relative; width: 500px; height: 500px; border-radius: 50%; list-style: none; padding: 0; }
         .letra { position: absolute; width: 38px; height: 38px; background: var(--azul-pasapalabra); border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; transform: translate(-50%, -50%); transition: all 0.3s; }
-        .acertada { background: var(--verde-acierto); box-shadow: 0 0 10px var(--verde-acierto); }
-        .fallada { background: var(--rojo-fallo); box-shadow: 0 0 10px var(--rojo-fallo); }
+        .acertada { background: var(--verde-acierto); }
+        .fallada { background: var(--rojo-fallo); }
         .activa { transform: translate(-50%, -50%) scale(1.3); border-color: var(--naranja-espera); box-shadow: 0 0 15px var(--naranja-espera); z-index: 10; }
-        #central-panel { position: absolute; text-align: center; width: 340px; z-index: 5; }
+
+        #central-panel { position: absolute; text-align: center; width: 340px; z-index: 5; transition: 0.3s; padding: 20px; border-radius: 20px; }
+        .modo-escucha { background: rgba(155, 89, 182, 0.2); border: 2px solid var(--morado-escucha); }
+        
         #timer { font-size: 3.5rem; font-weight: bold; margin-bottom: 5px; }
-        #pregunta-box { background: rgba(255, 255, 255, 0.15); padding: 20px; border-radius: 15px; min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2); }
+        
+        #pregunta-box {
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #status-voz {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--morado-escucha);
+            text-transform: uppercase;
+            height: 1.5em;
+            margin-top: 10px;
+            letter-spacing: 1px;
+        }
+
         #input-area { margin-top: 15px; display: flex; gap: 10px; flex-direction: column; }
-        input[type="text"] { padding: 10px; font-size: 1rem; border-radius: 8px; border: none; text-align: center; }
-        button { padding: 10px 15px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; }
-        #btn-micro { background: var(--morado-voz); color: white; }
+        input[type="text"] { padding: 12px; font-size: 1.1rem; border-radius: 8px; border: none; text-align: center; background: white; color: black; }
+        
+        .buttons { display: flex; gap: 5px; justify-content: center; margin-top: 10px; }
+        button { padding: 10px 15px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; text-transform: uppercase; }
+        
+        #btn-micro { background: var(--morado-escucha); color: white; }
         #btn-enviar { background: var(--verde-acierto); color: white; }
         #btn-pasapalabra { background: var(--naranja-espera); color: black; }
         #btn-start { background: white; color: #1a1a2e; font-size: 1.5rem; padding: 15px 40px; }
-        .escuchando { animation: pulse 1s infinite; background: #ff4b2b !important; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
         .hidden { display: none !important; }
+        
+        /* Animación para el mensaje de habla ahora */
+        .blink { animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <h1>PASAPALABRA FÚTBOL COMPETICIÓN</h1>
+    <h1>PASAPALABRA FÚTBOL</h1>
 
     <div id="game-container">
         <ul class="rosco" id="rosco-letras"></ul>
@@ -57,147 +84,133 @@
             <div id="timer">120</div>
             <div id="pregunta-box">
                 <span id="texto-pregunta">Pulsa para empezar</span>
-                <small id="status-voz" style="margin-top: 10px; color: #ffeb3b; font-weight: bold;"></small>
+                <div id="status-voz"></div>
             </div>
             <div id="input-area" class="hidden">
-                <input type="text" id="user-answer" placeholder="Responde..." autocomplete="off">
-                <div style="display:flex; gap:5px; margin-top:10px;">
-                    <button id="btn-micro">🎤</button>
-                    <button id="btn-enviar">ENVIAR</button>
+                <input type="text" id="user-answer" placeholder="..." autocomplete="off">
+                <div class="buttons">
+                    <button id="btn-micro">🎤 REINTENTAR</button>
+                    <button id="btn-enviar">OK</button>
                     <button id="btn-pasapalabra">PASAPALABRA</button>
                 </div>
             </div>
-            <button id="btn-start">EMPEZAR</button>
+            <button id="btn-start">EMPEZAR PARTIDO</button>
         </div>
     </div>
 
     <script>
         const FONETICA = {'I': 'con la i latina', 'V': 'con la uve', 'X': 'contiene la equis', 'Y': 'con la i griega'};
-        
-        // Banco de datos ajustado para que la letra coincida con el inicio de la respuesta (excepto X)
         const banco = {
             'A': [{r:'Alisson', p:'Portero brasileño del Liverpool.'}],
-            'B': [{r:'Benzema', p:'Ex delantero del Real Madrid y Balón de Oro.'}],
-            'C': [{r:'Courtois', p:'Portero belga del Real Madrid.'}],
-            'D': [{r:'Drogba', p:'Leyenda de Costa de Marfil.'}],
-            'E': [{r:'Etoo', p:'Delantero camerunés del Barça.'}],
-            'F': [{r:'Foden', p:'Estrella inglesa del Manchester City.'}],
-            'G': [{r:'Gavi', p:'Joven centrocampista del Barcelona.'}],
-            'H': [{r:'Haaland', p:'El delantero noruego del City.'}],
-            'I': [{r:'Iniesta', p:'Marcó el gol del mundial de España.'}],
-            'J': [{r:'Jorginho', p:'Centrocampista italiano campeón de Europa.'}],
-            'K': [{r:'Kane', p:'Capitán y goleador de Inglaterra.'}],
-            'L': [{r:'Lewandowski', p:'Goleador polaco del Barça.'}],
-            'M': [{r:'Messi', p:'El astro argentino del Inter Miami.'}],
-            'N': [{r:'Neymar', p:'Estrella brasileña que pasó por el PSG.'}],
-            'O': [{r:'Oblak', p:'El muro esloveno del Atlético.'}],
-            'P': [{r:'Puyol', p:'Capitán histórico del F.C. Barcelona.'}],
-            'Q': [{r:'Quaresma', p:'Jugador portugués famoso por la trivela.'}],
-            'R': [{r:'Ronaldo', p:'El fenómeno brasileño o el astro portugués.'}],
-            'S': [{r:'Suarez', p:'El pistolero uruguayo.'}],
-            'T': [{r:'Ter Stegen', p:'Portero alemán del Barcelona.'}],
-            'U': [{r:'Unai Simon', p:'Portero titular de la selección española.'}],
-            'V': [{r:'Vinicius', p:'Extremo brasileño del Real Madrid.'}],
-            'X': [{r:'Xavi', p:'Contiene la equis: Director del mejor Barça.'}],
-            'Y': [{r:'Yashin', p:'La araña negra del fútbol soviético.'}],
-            'Z': [{r:'Zidane', p:'Leyenda francesa de la volea eterna.'}]
+            'B': [{r:'Benzema', p:'Ganador del Balón de Oro 2022 y ex del Real Madrid.'}],
+            'C': [{r:'Courtois', p:'Portero belga clave en la decimocuarta del Madrid.'}],
+            'D': [{r:'Drogba', p:'Leyenda goleadora de Costa de Marfil.'}],
+            'E': [{r:'Etoo', p:'Delantero camerunés que ganó tripletes con Barça e Inter.'}],
+            'F': [{r:'Foden', p:'Joven estrella inglesa del Manchester City.'}],
+            'G': [{r:'Gavi', p:'Centrocampista del Barça, ganador del Golden Boy.'}],
+            'H': [{r:'Haaland', p:'El delantero noruego apodado el androide.'}],
+            'I': [{r:'Iniesta', p:'Autor del gol más importante de España.'}],
+            'J': [{r:'Jorginho', p:'Centrocampista italiano clave en la Eurocopa de 2021.'}],
+            'K': [{r:'Kane', p:'Máximo goleador histórico de la selección inglesa.'}],
+            'L': [{r:'Lewandowski', p:'Goleador polaco del Barcelona.'}],
+            'M': [{r:'Messi', p:'Capitán argentino campeón del mundo en Qatar.'}],
+            'N': [{r:'Neymar', p:'Extremo brasileño famoso por su regate y jogo bonito.'}],
+            'O': [{r:'Oblak', p:'Muro esloveno de la portería del Atlético.'}],
+            'P': [{r:'Puyol', p:'El eterno capitán tiburón del Barça.'}],
+            'Q': [{r:'Quaresma', p:'Portugués famoso por sus centros de trivela.'}],
+            'R': [{r:'Ronaldo', p:'El fenómeno brasileño o Cristiano el bicho.'}],
+            'S': [{r:'Suarez', p:'El pistolero uruguayo que brilló en el Barça.'}],
+            'T': [{r:'Ter Stegen', p:'Portero alemán con gran juego de pies del Barça.'}],
+            'U': [{r:'Unai Simon', p:'Portero titular de España y del Athletic.'}],
+            'V': [{r:'Vinicius', p:'Extremo brasileño estrella del Real Madrid.'}],
+            'X': [{r:'Xavi', p:'Contiene la equis: Maestro del centro del campo culé.'}],
+            'Y': [{r:'Yashin', p:'La araña negra y único portero Balón de Oro.'}],
+            'Z': [{r:'Zidane', p:'Zizou, autor de la volea en Glasgow.'}]
         };
 
-        let preguntas = [], currentIndex = 0, tiempo = 120, timer, activo = false, hablando = false;
+        let preguntas = [], currentIndex = 0, tiempo = 120, timer, activo = false, hablando = false, escuchaActivada = false;
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = 'es-ES';
+        recognition.interimResults = false;
 
-        // --- MOTOR DE VALIDACIÓN ESTRICTA ---
+        const panelUI = document.getElementById('central-panel');
+        const statusUI = document.getElementById('status-voz');
+        const inputUI = document.getElementById('user-answer');
+        const preguntaUI = document.getElementById('texto-pregunta');
+
         function normalizar(str) {
             return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
         }
 
-        // Levenshtein para flexibilidad fonética (errores de pronunciación del micro)
-        function editDistance(s1, s2) {
-            s1 = s1.toLowerCase(); s2 = s2.toLowerCase();
-            let costs = [];
-            for (let i = 0; i <= s1.length; i++) {
-                let lastValue = i;
-                for (let j = 0; j <= s2.length; j++) {
-                    if (i === 0) costs[j] = j;
-                    else if (j > 0) {
-                        let newValue = costs[j - 1];
-                        if (s1.charAt(i - 1) !== s2.charAt(j - 1)) newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
-                        costs[j - 1] = lastValue; lastValue = newValue;
-                    }
-                }
-                if (i > 0) costs[s2.length] = lastValue;
-            }
-            return costs[s2.length];
-        }
-
-        function esCorrecto(userRaw, correctRaw, letra) {
-            const user = normalizar(userRaw);
-            const correct = normalizar(correctRaw);
-            const letraNorm = normalizar(letra);
-
-            // REGLA DE ORO: Si no es la X, la respuesta del usuario DEBE empezar por la letra correcta
-            if (letraNorm !== 'x' && !user.startsWith(letraNorm)) {
-                return false; 
-            }
-            
-            // Si es la X, debe contener la letra
-            if (letraNorm === 'x' && !user.includes('x')) {
-                return false;
-            }
-
-            // Comparación de similitud (90% de coincidencia para ser estrictos pero permitir errores de micro)
-            const distancia = editDistance(user, correct);
-            const similitud = (Math.max(user.length, correct.length) - distancia) / Math.max(user.length, correct.length);
-            
-            return similitud > 0.85; 
-        }
-        // ------------------------------------
+        recognition.onstart = () => {
+            if (hablando) { recognition.stop(); return; }
+            escuchaActivada = true;
+            panelUI.classList.add('modo-escucha');
+            statusUI.innerHTML = '<span class="blink">● HABLA AHORA ●</span>';
+        };
 
         recognition.onresult = (e) => {
-            if (hablando) return;
+            if (!escuchaActivada || hablando) return;
             const res = e.results[0][0].transcript;
-            document.getElementById('user-answer').value = res;
-            document.getElementById('status-voz').innerText = `Oído: "${res}"`;
-            setTimeout(verificar, 500);
+            inputUI.value = res;
+            statusUI.innerText = `Oído: ${res}`;
+            escuchaActivada = false;
+            setTimeout(verificar, 400);
         };
 
         recognition.onend = () => {
-            document.getElementById('btn-micro').classList.remove('escuchando');
-            if (activo && !hablando) setTimeout(() => { try { recognition.start(); } catch(e){} }, 800);
+            panelUI.classList.remove('modo-escucha');
+            if (activo && !hablando && !escuchaActivada) {
+                // Pequeño delay de reintento si no se captó nada
+                setTimeout(() => { if(activo && !hablando) try { recognition.start(); } catch(e){} }, 800);
+            }
         };
 
         function hablar(texto, letra) {
             hablando = true;
-            if(recognition) recognition.stop();
-            const voz = new SpeechSynthesisUtterance(`${FONETICA[letra] || 'con la ' + letra}: ${texto}`);
-            voz.lang = 'es-ES';
-            voz.onend = () => { setTimeout(() => { hablando = false; if(activo) recognition.start(); }, 1000); };
-            window.speechSynthesis.speak(voz);
-            document.getElementById('texto-pregunta').innerText = `${letra}: ${texto}`;
+            escuchaActivada = false;
+            recognition.stop();
+            statusUI.innerText = "SISTEMA HABLANDO...";
+            
+            const locucion = new SpeechSynthesisUtterance(`${FONETICA[letra] || 'con la ' + letra}: ${texto}`);
+            locucion.lang = 'es-ES';
+            locucion.rate = 1.0;
+
+            locucion.onend = () => {
+                setTimeout(() => {
+                    hablando = false;
+                    preguntaUI.innerText = `${letra}: ${texto}`;
+                    if(activo) try { recognition.start(); } catch(e){}
+                }, 800); // Espera 0.8s para que no capte el eco
+            };
+            window.speechSynthesis.speak(locucion);
         }
 
         function verificar() {
-            if (hablando) return;
-            const input = document.getElementById('user-answer');
+            hablando = true; // Bloqueo temporal
+            const resUser = normalizar(inputUI.value);
             const actual = preguntas[currentIndex];
-            const letraUI = document.getElementById(`letra-${currentIndex}`);
+            const letraNorm = normalizar(actual.letra);
             
-            if (normalizar(input.value).includes("pasapalabra")) {
-                input.value = ""; pasapalabra(); return;
+            if (resUser.includes("pasapalabra")) {
+                inputUI.value = ""; pasapalabra(); return;
             }
 
-            if (esCorrecto(input.value, actual.r, actual.letra)) {
+            // Validación estricta: debe empezar por la letra (salvo X)
+            const cumpleLetra = (letraNorm === 'x') ? resUser.includes('x') : resUser.startsWith(letraNorm);
+
+            if (cumpleLetra && (resUser.includes(normalizar(actual.r)) || normalizar(actual.r).includes(resUser))) {
                 actual.estado = 'acierto';
-                letraUI.classList.add('acertada');
-                input.value = ""; siguiente();
+                document.getElementById(`letra-${currentIndex}`).classList.add('acertada');
+                inputUI.value = "";
+                hablando = false;
+                siguiente();
             } else {
                 actual.estado = 'fallo';
-                letraUI.classList.add('fallada');
-                hablando = true;
-                const errorVoz = new SpeechSynthesisUtterance(`Error, la respuesta correcta era ${actual.r}`);
-                errorVoz.onend = () => { input.value = ""; hablando = false; siguiente(); };
-                window.speechSynthesis.speak(errorVoz);
+                document.getElementById(`letra-${currentIndex}`).classList.add('fallada');
+                const feedback = new SpeechSynthesisUtterance(`Error, era ${actual.r}`);
+                feedback.onend = () => { inputUI.value = ""; hablando = false; siguiente(); };
+                window.speechSynthesis.speak(feedback);
             }
         }
 
@@ -208,14 +221,16 @@
                 vueltas++;
             }
             if (vueltas === 25) { finalizar(); return; }
+            
             document.querySelectorAll('.letra').forEach(l => l.classList.remove('activa'));
             document.getElementById(`letra-${currentIndex}`).classList.add('activa');
             hablar(preguntas[currentIndex].p, preguntas[currentIndex].letra);
         }
 
         function pasapalabra() {
-            const voz = new SpeechSynthesisUtterance("Pasamos palabra");
             hablando = true;
+            statusUI.innerText = "PASANDO PALABRA...";
+            const voz = new SpeechSynthesisUtterance("Pasamos palabra");
             voz.onend = () => { 
                 currentIndex = (currentIndex + 1) % 25; 
                 hablando = false; siguiente(); 
@@ -224,9 +239,12 @@
         }
 
         function finalizar() {
-            activo = false; clearInterval(timer);
+            activo = false; 
+            clearInterval(timer);
+            recognition.stop();
             const ok = preguntas.filter(p => p.estado === 'acierto').length;
-            document.getElementById('texto-pregunta').innerText = `FIN. Aciertos: ${ok}`;
+            preguntaUI.innerText = `JUEGO TERMINADO. Aciertos: ${ok}`;
+            statusUI.innerText = "";
             document.getElementById('input-area').classList.add('hidden');
             document.getElementById('btn-start').classList.remove('hidden');
         }
@@ -248,9 +266,10 @@
             timer = setInterval(() => { if(!hablando) { tiempo--; document.getElementById('timer').innerText = tiempo; if(tiempo<=0) finalizar(); }}, 1000);
             siguiente();
         });
-        
+
         document.getElementById('btn-enviar').addEventListener('click', verificar);
         document.getElementById('btn-pasapalabra').addEventListener('click', pasapalabra);
+        document.getElementById('btn-micro').addEventListener('click', () => { if(!hablando) try { recognition.start(); } catch(e){} });
     </script>
 </body>
 </html>
